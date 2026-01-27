@@ -1,4 +1,3 @@
-import React from "react";
 import NavBar from "../../Components/NavBar/NavBar";
 import Footer from "../../Components/Footer/Footer";
 
@@ -114,7 +113,7 @@ const PrivacyPolicy = () => {
       <div className="mt-20 p-10 text-center bg-green-800 text-white">
         <h2 className="text-4xl font-bold">Questions About Privacy?</h2>
         <p className="text-lg mt-5">
-          Contact us at <span className="font-bold">privacy@[yourwebsite].com</span>
+          Contact us at <span className="font-bold">privacy@[farmisto].com</span>
         </p>
       </div>
 

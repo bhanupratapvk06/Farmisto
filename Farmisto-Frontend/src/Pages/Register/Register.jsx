@@ -9,7 +9,7 @@ import axios from "../../utils/axios";
 import { useAuth } from "../../utils/Auth";
 
 const Register = () => {
-  const {login} = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -76,26 +76,26 @@ const Register = () => {
       alert("All fields are required!");
       return;
     }
-  
+
     setLoading(true);
-  
+
     const formData = {
       userName: nameRef.current?.value || "",
       email: emailRef.current.value,
       password: passwordRef.current.value,
       userLocation: locationRef.current,
     };
-  
+
     let isMounted = true;
-  
+
     try {
-  
+
       const response = await axios.post(
         `/user/${isLogin ? "login" : "register"}`,
         formData
       );
       console.log("Response Data: ", response.data);
-  
+
       if (isMounted && response.status === 200) {
         if (isLogin) {
           const token = response.data.token;
@@ -130,8 +130,9 @@ const Register = () => {
     <div
       style={{
         backgroundImage:
-          "url(https://cdn.dribbble.com/userupload/15096871/file/original-7d27c04dcd28a05d8dc9cf004a9548ac.jpg?resize=1200x904&vertical=center)",
+          "url(https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)",
       }}
+
       className="h-screen w-full flex justify-center items-center relative bg-cover"
     >
       <div
@@ -277,7 +278,7 @@ const Register = () => {
         {/* Image Section */}
         <div className="h-full w-full sm:w-1/2 bg-white p-2 sm:p-5">
           <img
-            src="https://cdn.dribbble.com/userupload/12474394/file/original-f302b712afeab2efe8b2ac76d999476d.png?resize=1200x900&vertical=center"
+            src="https://plus.unsplash.com/premium_photo-1661964436517-d977254ad1fe?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
             className="h-full w-full object-cover rounded-lg hidden sm:block"
             alt="Background"
           />
