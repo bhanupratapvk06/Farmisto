@@ -1125,3 +1125,5 @@ Several components exist in pairs — `AllBuyBlock` / `MobileBuyBlock`, `CartIte
 
 ### No Real-Time Features
 Despite having a `Message.jsx` component in the Retailer dashboard, there is no WebSocket or polling infrastructure in the current backend. This feature appears to be a UI placeholder for future implementation.
+#   F a r m i s t o  
+ 
