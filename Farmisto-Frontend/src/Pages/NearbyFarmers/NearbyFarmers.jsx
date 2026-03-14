@@ -5,31 +5,22 @@ import Footer from "../../Components/Footer/Footer";
 import Pagination from "@mui/material/Pagination";
 import { styled } from "@mui/material/styles";
 import axios from "../../utils/axios";
-import {
-  FaSearch,
-  FaMapMarkerAlt,
-  FaLeaf,
-  FaChevronDown,
-  FaShoppingBasket,
-} from "react-icons/fa";
+import { FaSearch, FaMapMarkerAlt, FaLeaf, FaChevronDown, FaShoppingBasket } from "react-icons/fa";
 import { motion } from "framer-motion";
 
-const StyledPagination = styled(Pagination)(({ theme }) => ({
+const StyledPagination = styled(Pagination)(() => ({
   "& .MuiPaginationItem-root": {
-    color: "#065e45",
-    fontSize: "0.875rem sm:1rem",
-    "&:hover": {
-      backgroundColor: "#f0fcf4",
-    },
-    "&.Mui-selected": {
-      backgroundColor: "#065e45",
-      color: "white",
-      "&:hover": {
-        backgroundColor: "#065e00",
-      },
-    },
+    color: "#1A1A1A",
+    "&:hover": { backgroundColor: "#EDE6D4" },
+    "&.Mui-selected": { backgroundColor: "#E8621A", color: "white", "&:hover": { backgroundColor: "#d05515" } },
   },
 }));
+
+const Sparkle = ({ size = 18, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 2C12.3 7.8 16.2 11.7 22 12C16.2 12.3 12.3 16.2 12 22C11.7 16.2 7.8 12.3 2 12C7.8 11.7 11.7 7.8 12 2Z" />
+  </svg>
+);
 
 const NearbyFarmers = () => {
   const [farmers, setFarmers] = useState([]);
@@ -39,225 +30,134 @@ const NearbyFarmers = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
-
   const ITEMS_PER_PAGE = 6;
 
   useEffect(() => {
     const fetchFarmers = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`/user/fetch-nearby-farmers`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-          },
-        });
+        const response = await axios.get(`/user/fetch-nearby-farmers`, { headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` } });
         setFarmers(response.data.farmers);
         setFilteredFarmers(response.data.farmers);
-      } catch (error) {
-        console.error("Error fetching farmers:", error);
-      } finally {
-        setLoading(false);
-      }
+      } catch (error) { console.error("Error fetching farmers:", error); }
+      finally { setLoading(false); }
     };
     fetchFarmers();
   }, []);
 
   useEffect(() => {
-    let updatedFarmers = farmers;
-    if (search) {
-      updatedFarmers = updatedFarmers.filter((farmer) =>
-        farmer.farmerName.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    if (category) {
-      updatedFarmers = updatedFarmers.filter(
-        (farmer) => farmer.farmerCategory === category
-      );
-    }
-    setFilteredFarmers(updatedFarmers);
+    let updated = farmers;
+    if (search) updated = updated.filter(f => f.farmerName.toLowerCase().includes(search.toLowerCase()));
+    if (category) updated = updated.filter(f => f.farmerCategory === category);
+    setFilteredFarmers(updated);
     setPage(1);
   }, [search, category, farmers]);
 
-  const debounce = (func, delay) => {
-    let timer;
-    return (...args) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => func(...args), delay);
-    };
-  };
-
-  const handleSearch = debounce((value) => setSearch(value), 300);
-  const categories = Array.from(
-    new Set(farmers.map((farmer) => farmer.farmerCategory))
-  );
-
+  const debounce = (func, delay) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => func(...a), delay); }; };
+  const handleSearch = debounce((v) => setSearch(v), 300);
+  const categories = Array.from(new Set(farmers.map(f => f.farmerCategory)));
   const totalPages = Math.ceil(filteredFarmers.length / ITEMS_PER_PAGE);
-  const paginatedFarmers = filteredFarmers.slice(
-    (page - 1) * ITEMS_PER_PAGE,
-    page * ITEMS_PER_PAGE
-  );
-
-  const handlePageChange = (event, value) => {
-    setPage(value);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const navigateToStore = (email) => {
-    navigate("/Profile", { state: { email } });
-  };
+  const paginatedFarmers = filteredFarmers.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f5f3e8]">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="animate-pulse text-base sm:text-lg font-medium text-[#6b9e5b] flex items-center gap-2"
-        >
-          <FaMapMarkerAlt /> Loading your local farm finds...
-        </motion.div>
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 rounded-full border-4 border-orange border-t-transparent animate-spin" />
+          <p className="text-muted font-medium">Finding farmers near you...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-cream">
       <NavBar />
 
-      <main className="flex-grow">
-        {/* Hero Banner */}
-        <motion.section
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-          className="bg-gradient-to-r from-green-300 to-green-400 py-8 sm:py-10 md:py-12 px-4 sm:px-6 lg:px-8 text-center"
-        >
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight flex items-center justify-center gap-2">
-            <FaLeaf /> Fresh from Nearby Farms
-          </h1>
-          <p className="mt-2 text-white text-xs sm:text-sm md:text-base lg:text-lg max-w-xl sm:max-w-2xl mx-auto">
-            Discover local farmers within 30km bringing you the freshest
-            produce.
-          </p>
-        </motion.section>
+      {/* Hero Banner */}
+      <div className="bg-cream-dark border-b border-cream-dark/50 py-16 text-center px-6">
+        <Sparkle size={20} className="text-orange mx-auto mb-4 animate-sparkle" />
+        <h1 className="font-serif text-5xl sm:text-6xl font-bold text-dark">
+          Nearby <span className="italic font-normal">Farmers</span>
+        </h1>
+        <p className="text-muted text-lg mt-4 max-w-xl mx-auto">
+          Discover local farmers within 30km bringing you the freshest produce.
+        </p>
+      </div>
 
+      <main className="flex-grow max-w-[1300px] mx-auto px-6 md:px-10 lg:px-16 py-12 w-full">
         {/* Filters */}
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4 max-w-3xl mx-auto">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search for farmers..."
-                className="w-full pl-8 pr-3 py-2 sm:pl-10 sm:pr-4 sm:py-3 rounded-xl border-2 border-green-100 focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-200 bg-green-50 shadow-sm text-emerald-800 placeholder-[#a3b899] hover:bg-green-100 cursor-pointer text-xs sm:text-sm md:text-base transition-all"
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-              <FaSearch className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[#6b9e5b]" />
-            </div>
-            <div className="relative flex-1">
-              <select
-                className="w-full pl-3 pr-8 py-2 sm:pl-4 sm:pr-10 sm:py-3 rounded-xl border-2 border-green-100 focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-green-200 bg-green-50 shadow-sm text-[#4a7043] text-xs sm:text-sm md:text-base appearance-none hover:bg-green-100 cursor-pointer transition-all"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              >
-                <option value="">Browse All Farm Goods</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-              <FaChevronDown className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[#6b9e5b] pointer-events-none" />
-            </div>
+        <div className="flex flex-col sm:flex-row gap-4 max-w-2xl mb-12">
+          <div className="relative flex-1">
+            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-muted text-sm" />
+            <input
+              type="text"
+              placeholder="Search farmers..."
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-cream-dark bg-white text-dark placeholder-muted focus:outline-none focus:border-orange transition-colors text-sm"
+            />
           </div>
-        </section>
+          <div className="relative flex-1">
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-cream-dark bg-white text-dark focus:outline-none focus:border-orange transition-colors text-sm appearance-none"
+            >
+              <option value="">All Categories</option>
+              {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+            </select>
+            <FaChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-muted text-xs pointer-events-none" />
+          </div>
+        </div>
 
         {/* Farmers Grid */}
-        <section className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-          {paginatedFarmers.length > 0 ? (
-            <>
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-                {paginatedFarmers.map((farmer) => (
-                  <motion.div
-                    key={farmer.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    onClick={() => navigateToStore(farmer.farmerEmail)}
-                    className="group bg-green-50 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-2 border-green-100 hover:border-green-200 cursor-pointer overflow-hidden"
-                  >
-                    {/* Farmer Image */}
-                    <div className="relative flex justify-center pt-3 sm:pt-4">
-                      <img
-                        src={
-                          farmer.image ||
-                          "https://www.strasys.uk/wp-content/uploads/2022/02/Depositphotos_484354208_S.jpg"
-                        }
-                        alt={farmer.farmerName}
-                        className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-full object-cover border-2 border-green-300 group-hover:border-green-200 transition-colors"
-                      />
-                      <span
-                        className={`absolute top-3 right-3 sm:top-4 sm:right-4 w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-4 md:h-4 rounded-full border-2 border-white ${
-                          true ? "bg-emerald-800" : "bg-red-500"
-                        }`}
-                      />
-                    </div>
-
-                    {/* Farmer Info */}
-                    <div className="p-3 sm:p-4 text-center">
-                      <h2 className="text-sm sm:text-base md:text-lg font-bold text-emerald-800 group-hover:text-emerald-700 transition-colors truncate">
-                        {farmer.farmerName}
-                      </h2>
-                      <p className="text-xs sm:text-sm text-emerald-800 mt-1 flex items-center justify-center gap-1 truncate">
-                        <FaMapMarkerAlt className="text-emerald-800" />{" "}
-                        {farmer.farmerAddress}
-                      </p>
-                      <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-emerald-800 border border-green-200 inline-block px-2 py-1 rounded-full font-medium truncate">
-                        {farmer.farmerCategory}
-                      </p>
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="mt-2 sm:mt-3 w-full flex items-center justify-center gap-1 sm:gap-2 py-1.5 sm:py-2 bg-emerald-800 text-white rounded-lg hover:bg-emerald-700 transition-colors text-xs sm:text-sm"
-                      >
-                        <FaShoppingBasket /> Shop
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                ))}
+        {paginatedFarmers.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
+              {paginatedFarmers.map((farmer, i) => (
+                <motion.div
+                  key={farmer.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: i * 0.05 }}
+                  onClick={() => navigate("/Profile", { state: { email: farmer.farmerEmail } })}
+                  className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-cream-dark/40 hover:border-orange/20 cursor-pointer overflow-hidden group"
+                >
+                  <div className="relative flex justify-center pt-8 pb-4 bg-cream-dark/20">
+                    <img
+                      src={farmer.image || "https://www.strasys.uk/wp-content/uploads/2022/02/Depositphotos_484354208_S.jpg"}
+                      alt={farmer.farmerName}
+                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-white shadow-md"
+                    />
+                    <span className="absolute top-4 right-4 w-3 h-3 rounded-full bg-orange border-2 border-white" />
+                  </div>
+                  <div className="p-4 text-center">
+                    <h2 className="font-serif text-lg font-bold text-dark group-hover:text-orange transition-colors truncate">{farmer.farmerName}</h2>
+                    <p className="text-xs text-muted mt-1 flex items-center justify-center gap-1 truncate">
+                      <FaMapMarkerAlt className="text-orange shrink-0" /> {farmer.farmerAddress}
+                    </p>
+                    <span className="mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-cream-dark text-dark">{farmer.farmerCategory}</span>
+                    <button className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 bg-dark text-white rounded-xl hover:bg-orange transition-colors text-sm font-semibold">
+                      <FaShoppingBasket size={12} /> Shop Now
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-12">
+                <StyledPagination count={totalPages} page={page} onChange={(_, v) => { setPage(v); window.scrollTo({ top: 0, behavior: "smooth" }); }} siblingCount={0} boundaryCount={1} />
               </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex justify-center mt-6 sm:mt-8 md:mt-10">
-                  <StyledPagination
-                    count={totalPages}
-                    page={page}
-                    onChange={handlePageChange}
-                    size="medium sm:large"
-                    siblingCount={0}
-                    boundaryCount={1}
-                    className="flex flex-wrap justify-center gap-1 sm:gap-2"
-                  />
-                </div>
-              )}
-            </>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12 sm:py-16 md:py-20"
-            >
-              <p className="text-emerald-800 text-base sm:text-lg md:text-xl font-medium">
-                No Farmers Nearby Yet
-              </p>
-              <p className="text-emerald-700 text-xs sm:text-sm md:text-base mt-2">
-                Try a new search or category to uncover fresh farm treasures!
-              </p>
-            </motion.div>
-          )}
-        </section>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-24">
+            <FaLeaf size={40} className="text-orange mx-auto mb-5 opacity-50" />
+            <p className="font-serif text-2xl font-bold text-dark mb-2">No Farmers Nearby Yet</p>
+            <p className="text-muted">Try adjusting your search or category filter.</p>
+          </div>
+        )}
       </main>
-
       <Footer />
     </div>
   );

@@ -1,63 +1,94 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 const Story = () => {
   return (
-    <div className="min-h-[50vh] sm:min-h-[60vh] md:min-h-[70vh] lg:min-h-[80vh] bg-white flex flex-col lg:flex-row py-6 sm:py-8 md:py-10 lg:py-12">
-      {/* Image Section */}
-      <div className="relative w-full lg:w-1/3 px-4 sm:px-6 md:px-12 lg:px-20 flex justify-center lg:justify-start">
-        <div className="relative w-full max-w-[240px] sm:max-w-[280px] md:max-w-[320px] lg:max-w-[360px] h-[240px] sm:h-[280px] md:h-[360px] lg:h-[420px] mt-8 sm:mt-10 md:mt-12 lg:mt-20">
-          <img
-            style={{
-              borderTopLeftRadius: "50%",
-              borderTopRightRadius: "10%",
-              borderBottomRightRadius: "50%",
-              borderBottomLeftRadius: "10%",
-            }}
-            src="https://images.pexels.com/photos/1094544/pexels-photo-1094544.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-            className="h-full w-full object-cover shadow-2xl"
-            alt="Fresh vegetables in a basket"
-          />
-          <div
-            style={{
-              backdropFilter: "blur(20px)",
-              backgroundColor: "rgba(255, 255, 255, 0.4)",
-              boxShadow: "0 4px 6px rgba(0,0,0,0.2)",
-            }}
-            className="absolute w-[100px] sm:w-[120px] md:w-[140px] h-8 sm:h-10 md:h-12 top-[50%] -right-4 sm:-right-6 md:-right-8 transform -translate-y-1/2 flex items-center justify-center rounded-3xl"
-          >
-            <p
+    <section className="section-padding bg-section-gradient">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+        {/* Image Section */}
+        <motion.div
+          initial={{ opacity: 0, x: -30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+          className="relative w-full lg:w-2/5 flex justify-center"
+        >
+          <div className="relative w-full max-w-[340px] h-[380px] lg:h-[450px]">
+            <div className="absolute -inset-3 bg-gradient-to-br from-green-300/30 to-emerald-200/30 rounded-[2rem] blur-2xl" />
+            <img
               style={{
-                textShadow: "2px 2px 2px rgba(0,0,0,0.2)",
+                borderTopLeftRadius: "50%",
+                borderTopRightRadius: "10%",
+                borderBottomRightRadius: "50%",
+                borderBottomLeftRadius: "10%",
               }}
-              className="text-white text-base sm:text-lg md:text-xl font-semibold whitespace-nowrap"
+              src="https://images.pexels.com/photos/1094544/pexels-photo-1094544.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+              className="relative h-full w-full object-cover shadow-2xl"
+              alt="Fresh vegetables in a basket"
+            />
+            {/* Floating badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="absolute top-[50%] -right-6 glass rounded-2xl px-5 py-3 shadow-xl animate-float"
             >
-              Since 2001
-            </p>
+              <p className="text-lg font-bold text-gradient">Since 2001</p>
+              <p className="text-xs text-neutral-500">Trusted Platform</p>
+            </motion.div>
           </div>
-        </div>
-      </div>
+        </motion.div>
 
-      {/* Story Section */}
-      <div className="w-full lg:w-2/3 px-4 sm:px-6 md:px-12 lg:px-20 py-6 sm:py-8 md:py-10 lg:py-12 flex flex-col justify-center items-center lg:items-start">
-        <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl text-[#242424] font-bold text-center lg:text-left">
-          Our Story
-        </h1>
-        <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-[#242424] font-medium tracking-wider mt-3 sm:mt-4 md:mt-5 lg:mt-6 max-w-xl sm:max-w-2xl md:max-w-3xl text-center lg:text-left">
-          At Farmisto, we’re redefining the farm-to-table journey by eliminating
-          intermediaries. Our platform connects consumers with farmers within a
-          5-kilometer radius, ensuring access to fresh, locally grown produce at
-          fair prices. For retailers, we provide a space to connect and
-          negotiate directly with farmers, fostering transparency and better
-          deals. Farmers, in turn, earn more for their hard work while building
-          trust with their communities. With Farmisto, it’s not just about
-          buying and selling—it’s about creating a fair, sustainable, and
-          connected food system for everyone.
-        </p>
-        <div className="rounded-full mt-4 sm:mt-6 md:mt-8 lg:mt-10 h-9 sm:h-10 md:h-11 lg:h-12 w-28 sm:w-32 md:w-36 lg:w-40 bg-green-800 flex justify-center items-center text-white cursor-pointer hover:bg-green-700 transition-all duration-300">
-          <p className="text-xs sm:text-sm md:text-base lg:text-base">Learn More</p>
-        </div>
+        {/* Text Section */}
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="w-full lg:w-3/5 flex flex-col items-center lg:items-start text-center lg:text-left"
+        >
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold uppercase tracking-wider mb-4">
+            Our Story
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-neutral-800 leading-tight">
+            Bridging the Gap Between
+            <span className="text-gradient"> Farms & Families</span>
+          </h2>
+          <p className="text-base lg:text-lg text-neutral-600 font-medium leading-relaxed mt-6 max-w-2xl">
+            At Farmisto, we're redefining the farm-to-table journey by eliminating
+            intermediaries. Our platform connects consumers with farmers within a
+            5-kilometer radius, ensuring access to fresh, locally grown produce at
+            fair prices. For retailers, we provide a space to connect and
+            negotiate directly with farmers, fostering transparency and better
+            deals.
+          </p>
+          <div className="flex flex-wrap gap-4 mt-8">
+            <a href="/about" className="btn-primary text-sm sm:text-base">
+              Learn More
+            </a>
+            <a href="/farmer/register" className="btn-outline text-sm sm:text-base">
+              Join as Farmer
+            </a>
+          </div>
+
+          {/* Features grid */}
+          <div className="grid grid-cols-2 gap-4 mt-10 w-full max-w-md">
+            {[
+              { icon: "🌱", label: "100% Organic" },
+              { icon: "🤝", label: "Direct Trade" },
+              { icon: "📍", label: "Hyperlocal" },
+              { icon: "💰", label: "Fair Pricing" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/60 backdrop-blur-sm border border-green-100">
+                <span className="text-xl">{item.icon}</span>
+                <span className="text-sm font-semibold text-neutral-700">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </section>
   );
 };
 

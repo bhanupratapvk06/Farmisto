@@ -1,5 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FaArrowRightLong } from "react-icons/fa6";
 
 const FeaturedProduct = () => {
   const navigate = useNavigate();
@@ -7,73 +9,133 @@ const FeaturedProduct = () => {
     {
       id: 1,
       image:
-        "https://plus.unsplash.com/premium_photo-1664551734578-fe47fea8cab8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8dmVnZXRhYmxlc3xlbnwwfHwwfHx8MA%3D%3D",
+        "https://plus.unsplash.com/premium_photo-1664551734578-fe47fea8cab8?w=500&auto=format&fit=crop&q=60",
       name: "Tomato",
-      description: "Fresh, juicy tomatoes.",
+      description: "Fresh, juicy tomatoes picked at peak ripeness.",
+      tag: "Popular",
     },
     {
       id: 2,
       image:
-        "https://plus.unsplash.com/premium_photo-1708971732799-649f5526ad73?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fHZlZ2V0YWJsZXN8ZW58MHx8MHx8fDA%3D",
+        "https://plus.unsplash.com/premium_photo-1708971732799-649f5526ad73?w=500&auto=format&fit=crop&q=60",
       name: "Capsicum",
-      description: "Crisp, colorful capsicum.",
+      description: "Crisp, colorful capsicum bursting with flavor.",
+      tag: "New",
     },
     {
       id: 3,
       image:
-        "https://images.unsplash.com/photo-1526470303-82c787d88682?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTZ8fHZlZ2V0YWJsZXN8ZW58MHx8MHx8fDA%3D",
-      name: "Capsicum",
-      description: "Zesty, ripe capsicum.",
+        "https://images.unsplash.com/photo-1526470303-82c787d88682?w=500&auto=format&fit=crop&q=60",
+      name: "Bell Pepper",
+      description: "Zesty, ripe bell peppers in vibrant colors.",
+      tag: "Seasonal",
     },
     {
       id: 4,
       image:
-        "https://images.unsplash.com/photo-1669544695328-c2a61f9382e8?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHZlZ2V0YWJsZXN8ZW58MHx8MHx8fDA%3D",
-      name: "Dough",
-      description: "Soft, local dough.",
+        "https://images.unsplash.com/photo-1669544695328-c2a61f9382e8?w=500&auto=format&fit=crop&q=60",
+      name: "Fresh Greens",
+      description: "Soft, organic leafy greens for your table.",
+      tag: "Organic",
     },
   ];
 
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: { staggerChildren: 0.15 },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  };
+
   return (
-    <div className="w-full min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-green-50 to-green-100 py-8 md:py-12">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center gap-8 md:gap-12">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl text-[#242424] font-bold text-center">
-          Our Featured Product
-        </h1>
-        <p className="text-base sm:text-lg md:text-xl text-zinc-600 font-medium text-center max-w-3xl">
-          Discover our Featured Product, handpicked for its quality and
-          freshness. Sourced directly from local farmers, it brings
-          farm-to-table goodness right to you. Support fair trade while enjoying
-          the best of nature’s harvest.
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-10 w-full">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="hover:scale-[1.05] border border-green-200 bg-green-50 transition-all duration-300 w-full max-w-[15rem] mx-auto h-60 p-4 rounded-3xl flex flex-col items-center justify-center shadow-sm"
-            >
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-24 h-24 md:w-28 md:h-28 shadow-lg object-cover rounded-3xl"
-              />
-              <h2 className="text-xl md:text-2xl font-bold mt-4 text-center">
-                {product.name}
-              </h2>
-              <p className="text-sm text-emerald-600 mt-2 text-center line-clamp-2">
-                {product.description}
-              </p>
-            </div>
-          ))}
-        </div>
-        <p
-          onClick={() => navigate("/market")}
-          className="text-emerald-800 font-semibold text-lg md:text-xl hover:text-emerald-700 hover:scale-[1.05] cursor-pointer transition-all duration-300 mt-4"
+    <section className="section-padding bg-white">
+      <div className="max-w-7xl mx-auto">
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12 lg:mb-16"
         >
-          See All Products
-        </p>
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold uppercase tracking-wider mb-4">
+            Featured Products
+          </span>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-neutral-800">
+            Handpicked <span className="text-gradient">Fresh Produce</span>
+          </h2>
+          <p className="text-base lg:text-lg text-neutral-500 font-medium mt-4 max-w-2xl mx-auto">
+            Sourced directly from local farmers, bringing farm-to-table goodness right to your kitchen.
+          </p>
+        </motion.div>
+
+        {/* Product Cards */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
+          {products.map((product) => (
+            <motion.div
+              key={product.id}
+              variants={cardVariants}
+              className="card-modern group cursor-pointer overflow-hidden"
+              onClick={() => navigate("/market")}
+            >
+              <div className="relative overflow-hidden rounded-t-[1.25rem]">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute top-3 left-3">
+                  <span className="px-3 py-1 text-xs font-bold text-white bg-gradient-to-r from-green-600 to-emerald-500 rounded-full shadow-lg">
+                    {product.tag}
+                  </span>
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </div>
+              <div className="p-5">
+                <h3 className="text-lg font-bold text-neutral-800 group-hover:text-green-700 transition-colors">
+                  {product.name}
+                </h3>
+                <p className="text-sm text-neutral-500 mt-1.5 line-clamp-2">
+                  {product.description}
+                </p>
+                <div className="flex items-center gap-2 mt-4 text-sm font-semibold text-green-700 group-hover:text-green-600 transition-all">
+                  <span>View Details</span>
+                  <FaArrowRightLong size={12} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="flex justify-center mt-10 lg:mt-14"
+        >
+          <button
+            onClick={() => navigate("/market")}
+            className="btn-primary flex items-center gap-3"
+          >
+            Browse All Products
+            <FaArrowRightLong size={14} />
+          </button>
+        </motion.div>
       </div>
-    </div>
+    </section>
   );
 };
 

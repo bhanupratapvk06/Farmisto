@@ -2,123 +2,96 @@ import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FaMinus, FaPlus } from "react-icons/fa6";
 import { MdDelete } from "react-icons/md";
+import { FaShoppingCart } from "react-icons/fa";
 import assets from "../../assets/assets";
 
 const CartItems = ({ cart, deleteItem, handleQuantityChange }) => {
   return (
-    <div className="w-full flex flex-col gap-3 bg-green-50 rounded-2xl p-2 sm:gap-4 overflow-y-auto scrollbar-none h-[50vh] sm:h-[60vh] md:h-[70vh] lg:h-[80vh]">
+    <div className="flex flex-col gap-4 overflow-y-auto scrollbar-none h-[80vh] pr-1">
+      {/* Section heading */}
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="font-serif text-2xl font-bold text-dark">Your Cart</h2>
+        <span className="text-sm text-muted">{cart.length} item{cart.length !== 1 ? "s" : ""}</span>
+      </div>
+
       {cart.length === 0 ? (
-        <div
-          className="text-center text-md sm:text-lg md:text-xl font-semibold text-emerald-800 relative h-full flex items-center justify-center"
-          style={{
-            backgroundImage: `url(${assets.cart})`,
-            backgroundSize: "contain",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-          }}
-        >
-          <div className="absolute inset-0 bg-white opacity-5 z-0"></div>
-          <p>Your cart is empty</p>
+        <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
+          <FaShoppingCart size={48} className="text-orange/30" />
+          <p className="font-serif text-xl font-bold text-dark">Your cart is empty</p>
+          <p className="text-muted text-sm">Head to the market to add fresh produce.</p>
         </div>
       ) : (
         <AnimatePresence>
           {cart.map((item) => (
             <motion.div
               key={item.id}
-              className="h-36 sm:h-40  w-full rounded-xl border border-green-200 flex flex-col sm:flex-row items-center justify-between p-2 md:pr-6 bg-green-100 shadow-sm"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9, x: 200 }}
+              className="w-full bg-white rounded-2xl border border-cream-dark shadow-sm flex items-center gap-5 px-5 py-4"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, x: 80 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
             >
-              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto">
-                <div className="h-28 w-28 sm:h-36 sm:w-36  bg-green-200 rounded-xl flex justify-center items-center">
-                  <img
-                    src={item.imageUrl || assets.defaultImage}
-                    alt={item.itemName || "Product"}
-                    className="h-full w-full object-contain"
-                  />
-                </div>
-                <div className="text-center sm:text-left mt-2 sm:mt-0">
-                  <h1 className="text-md sm:text-lg md:text-xl font-semibold text-green-900">
-                    {item.itemName}
-                  </h1>
-                  <p className="text-sm sm:text-md font-medium text-emerald-700 mt-1 sm:mt-2">
-                    Price:{" "}
-                    <span className="text-emerald-800">
-                      {item.itemPrice} {item.itemUnit.unit}
-                    </span>
-                  </p>
-                  <motion.span
-                    onClick={() => deleteItem(item.id)}
-                    className="flex items-center justify-center sm:justify-start gap-1 mt-2 sm:mt-3 cursor-pointer"
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <MdDelete
-                      size={16}
-                      sm:size={18}
-                      md:size={20}
-                      className="text-red-600"
-                    />
-                    <p className="text-sm sm:text-md text-red-600 font-semibold">
-                      Delete
-                    </p>
-                  </motion.span>
-                </div>
+              {/* Image */}
+              <div className="h-20 w-20 shrink-0 bg-cream rounded-xl flex items-center justify-center overflow-hidden">
+                <img
+                  src={item.imageUrl || assets.defaultImage}
+                  alt={item.itemName || "Product"}
+                  className="h-full w-full object-contain"
+                />
               </div>
-              <div className="w-full sm:w-32 md:w-40 mt-2 sm:mt-0 flex flex-col items-center sm:items-end gap-2">
-                <div className="w-full sm:w-28 md:w-32 flex flex-col gap-1">
-                  <p className="text-xs sm:text-sm md:text-md font-medium text-emerald-700">
-                    Quantity
-                  </p>
-                  <div className="flex h-8 sm:h-9 md:h-10 bg-emerald-300 rounded-lg border overflow-hidden border-emerald-500">
-                    <motion.div
-                      onClick={() => handleQuantityChange(item.id, -1)}
-                      className="w-1/3 flex justify-center items-center cursor-pointer hover:bg-emerald-200"
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <FaMinus
-                        className="text-emerald-800"
-                        size={15}
-                        sm:size={16}
-                      />
-                    </motion.div>
-                    <div className="w-1/3 flex justify-center items-center bg-green-100">
-                      <p className="text-md sm:text-lg font-medium text-emerald-600">
-                        {item.quantity}
-                      </p>
-                    </div>
-                    <motion.div
-                      onClick={() => handleQuantityChange(item.id, 1)}
-                      className="w-1/3 flex justify-center items-center cursor-pointer hover:bg-emerald-200"
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <FaPlus
-                        className="text-emerald-800"
-                        size={15}
-                        sm:size={16}
-                      />
-                    </motion.div>
-                  </div>
-                </div>
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <h3 className="font-serif text-base font-bold text-dark truncate">{item.itemName}</h3>
+                <p className="text-sm text-muted mt-0.5">
+                  ₹{item.itemPrice} / {item.itemUnit?.unit}
+                </p>
                 {item.discountedPrice !== 0 && (
-                  <div className="text-center sm:text-right">
-                    <span className="flex gap-2 sm:gap-3 justify-center sm:justify-end">
-                      <p className="text-xs sm:text-sm md:text-md text-emerald-800 font-medium line-through">
-                        Rs {item.itemPrice}
-                      </p>
-                      <p className="text-xs sm:text-sm md:text-md font-medium text-emerald-700">
-                        Rs {item.discountedPrice}
-                      </p>
-                    </span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-muted line-through">₹{item.itemPrice}</span>
+                    <span className="text-xs font-bold text-orange">₹{item.discountedPrice}</span>
                     {item.saving !== 0 && (
-                      <p className="text-xs sm:text-sm text-emerald-800 font-medium mt-1">
-                        You save {item.saving}%
-                      </p>
+                      <span className="text-xs bg-orange/10 text-orange px-2 py-0.5 rounded-full font-semibold">
+                        -{item.saving}%
+      </span>
                     )}
                   </div>
                 )}
               </div>
+
+              {/* Qty stepper */}
+              <div className="flex items-center gap-1 shrink-0">
+                <motion.button
+                  onClick={() => handleQuantityChange(item.id, -1)}
+                  whileTap={{ scale: 0.9 }}
+                  className="w-8 h-8 flex items-center justify-center rounded-xl bg-cream border border-cream-dark hover:border-orange hover:text-orange transition-colors text-dark"
+                >
+                  <FaMinus size={10} />
+                </motion.button>
+                <span className="w-8 text-center font-bold text-dark text-sm">{item.quantity}</span>
+                <motion.button
+                  onClick={() => handleQuantityChange(item.id, 1)}
+                  whileTap={{ scale: 0.9 }}
+                  className="w-8 h-8 flex items-center justify-center rounded-xl bg-cream border border-cream-dark hover:border-orange hover:text-orange transition-colors text-dark"
+                >
+                  <FaPlus size={10} />
+                </motion.button>
+              </div>
+
+              {/* Total */}
+              <div className="text-right shrink-0 w-20">
+                <p className="font-bold text-dark text-base">₹{(item.discountedPrice || item.itemPrice) * item.quantity}</p>
+                <p className="text-xs text-muted">total</p>
+              </div>
+
+              {/* Delete */}
+              <motion.button
+                onClick={() => deleteItem(item.id)}
+                whileTap={{ scale: 0.9 }}
+                className="w-8 h-8 flex items-center justify-center rounded-xl bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors shrink-0"
+              >
+                <MdDelete size={16} />
+              </motion.button>
             </motion.div>
           ))}
         </AnimatePresence>

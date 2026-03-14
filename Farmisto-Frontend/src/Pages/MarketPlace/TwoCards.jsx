@@ -1,55 +1,53 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const TwoCards = () => {
+  const cards = [
+    {
+      label: "Vegetables",
+      title: "Green World",
+      offer: "Get 50% off on selected Veggies.",
+      bg: "#6CC24A",
+      img: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?w=700&h=500&fit=crop",
+    },
+    {
+      label: "Fresh Fruits",
+      title: "Healthy Food",
+      offer: "Get 40% off on selected Fruits.",
+      bg: "#E8621A",
+      img: "https://images.unsplash.com/photo-1621955975083-b66b44853e5c?w=700&h=500&fit=crop",
+    },
+  ];
+
   return (
-    <div className="w-full min-h-[40vh] sm:min-h-[45vh] md:min-h-[50vh] lg:min-h-[52vh] flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-5 md:gap-6 lg:gap-8 px-4 sm:px-6 md:px-8">
-
-      <div
-        style={{
-          backgroundImage:
-            "url(https://images.unsplash.com/photo-1633954643938-cf09ec60c436?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)",
-          backgroundPosition: "center",
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
-        }}
-        className="h-64 sm:h-72 md:h-80 lg:h-[80%] sm:p-5 w-full md:w-[42%] rounded-xl bg-green-100 flex flex-col gap-2 sm:gap-3 pl-4 sm:pl-5 md:pl-6 justify-center shadow-xl"
-      >
-        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-medium text-white">
-          Vegetable
-        </p>
-        <h1 className="font-[kurale] text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white font-semibold">
-          Green World
-        </h1>
-        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-medium text-white mt-1 sm:mt-2 md:mt-3">
-          Get 50% off on selected Veggies.
-        </p>
-        <button className="bg-white text-[#0d331c] font-bold py-1 sm:py-2 px-3 sm:px-4 w-32 sm:w-36 md:w-40 rounded-lg mt-1 sm:mt-2 md:mt-3 text-sm sm:text-base">
-          Discover Now
-        </button>
-      </div>
-
-      <div
-        style={{
-          backgroundImage:
-            "url(https://images.unsplash.com/photo-1559028901-a2768411cc29?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTh8fGRhcmslMjBmcnVpdHN8ZW58MHx8MHx8fDA%3D)",
-          backgroundPosition: "center",
-          backgroundSize: "cover",
-          backgroundRepeat: "no-repeat",
-        }}
-        className="h-64 sm:h-72 md:h-80 lg:h-[80%] sm:p-5 w-full md:w-[42%] rounded-xl bg-green-400 flex flex-col gap-2 sm:gap-3 pl-4 sm:pl-5 md:pl-6 justify-center shadow-xl"
-      >
-        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-medium text-white">
-          Fresh Fruits
-        </p>
-        <h1 className="font-[kurale] text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-white">
-          Healthy Food
-        </h1>
-        <p className="text-sm sm:text-base md:text-lg lg:text-xl font-medium text-white mt-1 sm:mt-2 md:mt-3">
-          Get 40% off on selected Fruits.
-        </p>
-        <button className="bg-white text-[#0d331c] font-bold py-1 sm:py-2 px-3 sm:px-4 w-32 sm:w-36 md:w-40 rounded-lg mt-1 sm:mt-2 md:mt-3 text-sm sm:text-base">
-          Discover Now
-        </button>
+    <div id="products" className="w-full bg-cream py-16 lg:py-20">
+      <div className="max-w-[1300px] mx-auto px-6 md:px-10 lg:px-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {cards.map((card, i) => (
+            <div
+              key={i}
+              className="relative rounded-3xl overflow-hidden h-64 sm:h-80 shadow-xl group cursor-pointer"
+              style={{ backgroundImage: `url(${card.img})`, backgroundSize: "cover", backgroundPosition: "center" }}
+            >
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-dark/75 via-dark/30 to-transparent group-hover:from-dark/85 transition-all duration-300" />
+              
+              {/* Content */}
+              <div className="absolute inset-0 flex flex-col justify-end p-7">
+                <span className="text-sm font-bold uppercase tracking-widest mb-1" style={{ color: card.bg === "#6CC24A" ? "#86efac" : "#fca5a5" }}>{card.label}</span>
+                <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-2">{card.title}</h2>
+                <p className="text-white/80 text-base mb-5">{card.offer}</p>
+                <Link
+                  to="/market"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-semibold text-dark text-sm transition-all duration-300 w-fit hover:-translate-y-0.5"
+                  style={{ backgroundColor: card.bg === "#6CC24A" ? "#E8C547" : "#f5f5f5" }}
+                >
+                  Discover Now →
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

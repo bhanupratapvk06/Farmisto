@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
-  FaAppleAlt,
-  FaSeedling,
-  FaShoppingBasket,
-  FaCarrot,
-  FaPepperHot,
-  FaLeaf,
-  FaFish,
-  FaMinus,
-  FaPlus,
-  FaCartPlus,
-  FaTractor,
+  FaAppleAlt, FaSeedling, FaShoppingBasket, FaCarrot,
+  FaPepperHot, FaLeaf, FaFish, FaMinus, FaPlus, FaCartPlus,
 } from "react-icons/fa";
 import { ImCross } from "react-icons/im";
 import axios from "../../utils/axios";
@@ -20,7 +11,7 @@ import MobileBuyBlock from "../../Components/BuySection/MobileBuyBlock";
 import AllBuyBlock from "../../Components/BuySection/AllBuyBlock";
 
 const BuyBlock = () => {
-  const { userDetails, authToken } = useAuth();
+  const { authToken } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
@@ -31,280 +22,121 @@ const BuyBlock = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const sideBarKinds = [
-    { name: "Seasonal", icon: <FaSeedling className="text-[#155724]" /> },
-    { name: "Daily", icon: <FaShoppingBasket className="text-[#155724]" /> },
+    { name: "Seasonal", icon: <FaSeedling className="text-orange" /> },
+    { name: "Daily", icon: <FaShoppingBasket className="text-orange" /> },
   ];
-
   const sideBarCategory = [
-    { name: "Vegetables", icon: <FaCarrot className="text-[#155724]" /> },
-    { name: "Fruits", icon: <FaAppleAlt className="text-[#155724]" /> },
-    { name: "Nuts", icon: <FaLeaf className="text-[#155724]" /> },
-    { name: "Dairy", icon: <FaFish className="text-[#155724]" /> },
-    { name: "Spices", icon: <FaPepperHot className="text-[#155724]" /> },
-    { name: "Pulses", icon: <FaSeedling className="text-[#155724]" /> },
+    { name: "Vegetables", icon: <FaCarrot className="text-orange" /> },
+    { name: "Fruits", icon: <FaAppleAlt className="text-orange" /> },
+    { name: "Nuts", icon: <FaLeaf className="text-orange" /> },
+    { name: "Dairy", icon: <FaFish className="text-orange" /> },
+    { name: "Spices", icon: <FaPepperHot className="text-orange" /> },
+    { name: "Pulses", icon: <FaSeedling className="text-orange" /> },
   ];
 
   const GetProducts = async () => {
     try {
       const response = await axios.get("/market/get-items");
       const allItems = response.data.items || [];
-      console.log(allItems);
       setAllProducts(allItems);
       setProducts(allItems);
-    } catch (error) {
-      console.error("Failed to fetch farmer produce: ", error);
-    }
+    } catch (error) { console.error("Failed to fetch farmer produce: ", error); }
   };
 
-  const handleQuantityChange = (change) => {
-    setQuantity((prevQuantity) => Math.max(1, prevQuantity + change));
-  };
+  const handleQuantityChange = (change) => setQuantity(prev => Math.max(1, prev + change));
 
-  const AddToCart = async (product, quantity = 1) => {
-    console.log(product);
+  const AddToCart = async (product, qty = 1) => {
     const item = {
-      id: product._id,
-      itemName: product.itemName,
-      itemPrice: product.itemPrice,
-      imageUrl: product.itemImage,
-      quantity: quantity,
-      itemUnit: {
-        value: product.itemPrice,
-        unit: product.itemUnit.unit,
-      },
-      farmer: {
-        id: product.seller.id,
-        name: product.seller.name,
-        email: product.seller.email,
-      },
+      id: product._id, itemName: product.itemName, itemPrice: product.itemPrice,
+      imageUrl: product.itemImage, quantity: qty,
+      itemUnit: { value: product.itemPrice, unit: product.itemUnit.unit },
+      farmer: { id: product.seller.id, name: product.seller.name, email: product.seller.email },
     };
-
     try {
-      const response = await axios.post("/user/buy-item", item, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-      console.log("Added to cart: ", response.data);
+      await axios.post("/user/buy-item", item, { headers: { Authorization: `Bearer ${authToken}` } });
       closeModal();
-    } catch (error) {
-      console.error("Failed to add item to cart: ", error);
-      alert("Failed to add item to cart.");
-    }
+    } catch (error) { console.error("Failed to add item to cart: ", error); alert("Failed to add item to cart."); }
   };
 
-  const openModal = (product) => {
-    setSelectedProduct(product);
-    setModal(true);
-  };
-
-  const closeModal = () => {
-    setModal(false);
-    setQuantity(1);
-    setTimeout(() => {
-      setSelectedProduct(null);
-      setQuantity(1);
-    }, 500);
-  };
+  const openModal = (product) => { setSelectedProduct(product); setModal(true); };
+  const closeModal = () => { setModal(false); setQuantity(1); setTimeout(() => { setSelectedProduct(null); setQuantity(1); }, 500); };
 
   const filterProducts = () => {
     let filtered = allProducts;
-    if (selectedCategory) {
-      filtered = filtered.filter(
-        (product) => product.itemCategory === selectedCategory
-      );
-    }
-    if (selectedKind) {
-      filtered = filtered.filter(
-        (product) => product.itemType === selectedKind
-      );
-    }
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (product) =>
-          product.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          product.itemCategory
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          product.farmerName.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+    if (selectedCategory) filtered = filtered.filter(p => p.itemCategory === selectedCategory);
+    if (selectedKind) filtered = filtered.filter(p => p.itemType === selectedKind);
+    if (searchTerm) filtered = filtered.filter(p => p.itemName.toLowerCase().includes(searchTerm.toLowerCase()) || p.itemCategory.toLowerCase().includes(searchTerm.toLowerCase()) || p.farmerName.toLowerCase().includes(searchTerm.toLowerCase()));
     setProducts(filtered);
   };
 
-  useEffect(() => {
-    GetProducts();
-  }, []);
-
-  useEffect(() => {
-    filterProducts();
-  }, [searchTerm, selectedKind, selectedCategory]);
+  useEffect(() => { GetProducts(); }, []);
+  useEffect(() => { filterProducts(); }, [searchTerm, selectedKind, selectedCategory]);
 
   return (
-    <div className="w-full min-h-screen bg-green-50 p-4 sm:p-6 md:p-8 lg:p-10 overflow-x-hidden mt-10">
-      {/* Modal */}
+    <div className="w-full min-h-screen bg-cream px-4 sm:px-6 md:px-8 lg:px-10 py-12 overflow-x-hidden">
+      {/* Product Detail Modal */}
       {modal && selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-[#155724]/50" onClick={closeModal} />
+          <div className="fixed inset-0 bg-dark/50 backdrop-blur-sm" onClick={closeModal} />
           <motion.div
-            className="relative w-full max-w-md sm:max-w-lg md:max-w-xl bg-[#f0f7e4] rounded-lg shadow-xl max-h-[90vh] z-50"
+            className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto z-50"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
-            <motion.span
-              onClick={closeModal}
-              className="absolute -top-5 -right-5 p-2 cursor-pointer hover:scale-105 z-50"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ImCross
-                size={18}
-                className="text-[#6b8e23] hover:text-[#8ab644]"
-              />
-            </motion.span>
-            <div className="flex flex-col gap-4 p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between border border-[#a3cfae] rounded-lg p-4">
-                <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
-                  <div className="h-24 w-24 sm:h-32 sm:w-32 bg-[#d4edda] rounded-lg flex justify-center items-center">
-                    <img
-                      src={
-                        selectedProduct.itemImage ||
-                        "https://via.placeholder.com/150"
-                      }
-                      alt={selectedProduct.itemName || "Produce"}
-                      className="h-full w-full object-contain"
-                    />
-                  </div>
-                  <div className="text-center sm:text-left">
-                    <h1 className="text-lg sm:text-xl font-semibold text-[#155724]">
-                      {selectedProduct.itemName}
-                    </h1>
-                    <p className="text-sm sm:text-base font-medium text-[#155724] mt-1">
-                      From:{" "}
-                      <span className="text-[#6b8e23]">
-                        {selectedProduct.farmerName}
-                      </span>
-                    </p>
-                    <p className="text-sm sm:text-base font-medium text-[#155724] mt-1">
-                      Price:{" "}
-                      <span className="text-[#6b8e23]">
-                        ₹{selectedProduct.itemPrice} / {selectedProduct.unit}
-                      </span>
-                    </p>
-                    <div className="flex items-center justify-center sm:justify-start gap-2 mt-3">
-                      <motion.div
-                        onClick={() => handleQuantityChange(-1)}
-                        className="w-8 h-8 flex justify-center items-center bg-[#6b8e23] text-white rounded-md cursor-pointer hover:bg-[#8ab644]"
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <FaMinus />
-                      </motion.div>
-                      <div className="w-10 h-8 flex justify-center items-center bg-[#f0f7e4] border border-[#a3cfae] rounded-md">
-                        <p className="text-lg font-semibold text-[#155724]">
-                          {quantity}
-                        </p>
-                      </div>
-                      <motion.div
-                        onClick={() => handleQuantityChange(1)}
-                        className="w-8 h-8 flex justify-center items-center bg-[#6b8e23] text-white rounded-md cursor-pointer hover:bg-[#8ab644]"
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <FaPlus />
-                      </motion.div>
-                    </div>
+            <button onClick={closeModal} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-cream-dark hover:bg-orange hover:text-white transition-colors z-10">
+              <ImCross size={12} />
+            </button>
+            <div className="p-6 flex flex-col gap-4">
+              <div className="flex items-center gap-5 border border-cream-dark rounded-2xl p-5">
+                <div className="h-28 w-28 bg-cream rounded-xl flex justify-center items-center shrink-0">
+                  <img src={selectedProduct.itemImage || "https://via.placeholder.com/150"} alt={selectedProduct.itemName} className="h-full w-full object-contain rounded-xl" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="font-serif text-xl font-bold text-dark">{selectedProduct.itemName}</h2>
+                  <p className="text-sm text-muted mt-1">From: <span className="text-dark font-semibold">{selectedProduct.farmerName}</span></p>
+                  <p className="text-sm text-muted mt-1">₹{selectedProduct.itemPrice} / {selectedProduct.unit}</p>
+                  <div className="flex items-center gap-2 mt-3">
+                    <button onClick={() => handleQuantityChange(-1)} className="w-8 h-8 flex items-center justify-center bg-cream-dark rounded-lg hover:bg-orange hover:text-white transition-colors"><FaMinus size={10} /></button>
+                    <span className="w-10 text-center font-bold text-dark">{quantity}</span>
+                    <button onClick={() => handleQuantityChange(1)} className="w-8 h-8 flex items-center justify-center bg-cream-dark rounded-lg hover:bg-orange hover:text-white transition-colors"><FaPlus size={10} /></button>
                   </div>
                 </div>
-                <motion.div
-                  onClick={() => AddToCart(selectedProduct, quantity)}
-                  className="w-full sm:w-32 h-10 mt-4 sm:mt-0 flex items-center justify-center bg-[#6b8e23] hover:bg-[#8ab644] text-white rounded-md cursor-pointer shadow-sm"
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <p className="text-sm font-medium flex items-center gap-2">
-                    <FaCartPlus /> Buy Now
-                  </p>
-                </motion.div>
+                <button onClick={() => AddToCart(selectedProduct, quantity)} className="shrink-0 flex items-center gap-2 px-5 py-3 bg-orange text-white rounded-xl font-semibold text-sm hover:bg-orange-hover transition-colors shadow-md">
+                  <FaCartPlus /> Add
+                </button>
               </div>
-              <div className="space-y-2">
-                {allProducts
-                  .filter(
-                    (product) => product.itemName === selectedProduct.itemName
-                  )
-                  .map((product) => (
-                    <div
-                      key={product._id}
-                      className="flex items-center bg-[#e6f4cc] border border-[#a3cfae] rounded-lg p-3"
-                    >
-                      <div className="h-16 w-16 bg-[#d4edda] rounded-md flex-shrink-0">
-                        <img
-                          src={product.itemImage}
-                          alt={product.itemName}
-                          className="h-full w-full object-contain"
-                        />
-                      </div>
-                      <div className="flex-1 px-3">
-                        <p className="text-sm font-medium text-[#155724]">
-                          {product.farmerName}
-                        </p>
-                        <p className="text-sm text-[#6b8e23]">
-                          ₹{product.itemPrice} / {product.unit}
-                        </p>
-                        <p className="text-xs text-[#155724]/80">
-                          Stock: {product.quantity} {product.unit}
-                        </p>
-                      </div>
-                      <motion.div
-                        onClick={() => setSelectedProduct(product)}
-                        className="px-3 py-1 bg-[#6b8e23] hover:bg-[#8ab644] text-white rounded-md shadow-sm cursor-pointer"
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <p className="text-sm font-medium">Select</p>
-                      </motion.div>
+              {/* Other seller options */}
+              <div className="space-y-3">
+                {allProducts.filter(p => p.itemName === selectedProduct.itemName).map(product => (
+                  <div key={product._id} className="flex items-center bg-cream rounded-2xl p-4 border border-cream-dark">
+                    <img src={product.itemImage} alt={product.itemName} className="h-14 w-14 object-contain rounded-lg bg-white" />
+                    <div className="flex-1 px-4">
+                      <p className="font-semibold text-dark text-sm">{product.farmerName}</p>
+                      <p className="text-orange text-sm font-bold">₹{product.itemPrice}/{product.unit}</p>
+                      <p className="text-xs text-muted">Stock: {product.quantity} {product.unit}</p>
                     </div>
-                  ))}
+                    <button onClick={() => setSelectedProduct(product)} className="px-4 py-2 bg-dark text-white rounded-xl text-sm font-semibold hover:bg-orange transition-colors">Select</button>
+                  </div>
+                ))}
               </div>
             </div>
           </motion.div>
         </div>
       )}
 
-      {/* Header */}
-      <div className="text-center p-4">
-        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-[#155724] tracking-tight flex items-center justify-center gap-2">
-          <FaTractor className="text-[#6b8e23]" />
-          Farmisto
-        </h1>
-        <p className="text-base sm:text-lg md:text-xl text-[#155724]/80 mt-2">
-          Fresh Produce Direct from Local Farmers
-        </p>
+      {/* Section Header */}
+      <div className="text-center mb-10">
+        <p className="text-orange font-bold tracking-widest uppercase text-sm mb-2">Farmisto Market</p>
+        <h2 className="font-serif text-4xl sm:text-5xl font-bold text-dark">Fresh Produce from Local Farmers</h2>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content Layouts */}
       <div className="hidden lg:block w-full">
-        <AllBuyBlock
-          products={products}
-          openModal={openModal}
-          sideBarKinds={sideBarKinds}
-          sideBarCategory={sideBarCategory}
-          setSelectedKind={setSelectedKind}
-          setSelectedCategory={setSelectedCategory}
-          selectedKind={selectedKind}
-          selectedCategory={selectedCategory}
-        />
+        <AllBuyBlock products={products} openModal={openModal} sideBarKinds={sideBarKinds} sideBarCategory={sideBarCategory} setSelectedKind={setSelectedKind} setSelectedCategory={setSelectedCategory} selectedKind={selectedKind} selectedCategory={selectedCategory} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       </div>
-
       <div className="lg:hidden w-full">
-        <MobileBuyBlock
-          products={products}
-          openModal={openModal}
-          sideBarKinds={sideBarKinds}
-          sideBarCategory={sideBarCategory}
-          setSelectedKind={setSelectedKind}
-          setSelectedCategory={setSelectedCategory}
-          selectedKind={selectedKind}
-          selectedCategory={selectedCategory}
-        />
+        <MobileBuyBlock products={products} openModal={openModal} sideBarKinds={sideBarKinds} sideBarCategory={sideBarCategory} setSelectedKind={setSelectedKind} setSelectedCategory={setSelectedCategory} selectedKind={selectedKind} selectedCategory={selectedCategory} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       </div>
     </div>
   );

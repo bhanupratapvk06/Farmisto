@@ -1,7 +1,7 @@
 const { GenerateToken } = require("../middleware/TokenAuth.js");
 const Farmer = require("../models/Farmer");
 const { fetchLocation } = require("./GeoController");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const Payment = require("../models/Payment");
 const User = require("../models/User");
 const cloudinary = require("cloudinary").v2;

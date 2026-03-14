@@ -1,287 +1,297 @@
-import React, { useRef, useEffect, useState, useContext } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { RiLeafFill } from "react-icons/ri";
-import { FaApple, FaArrowLeftLong } from "react-icons/fa6";
+import { FaArrowLeftLong } from "react-icons/fa6";
 import { PuffLoader } from "react-spinners";
 import { Modal } from "rsuite";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
+import { FaTractor, FaUser, FaMapMarkerAlt } from "react-icons/fa";
 import axios from "../../utils/axios";
 import { useAuth } from "../../utils/Auth";
 
+/* ─── Role config ─────────────────────────────────────── */
+const ROLES = {
+  consumer: {
+    label: "Consumer",
+    icon: FaUser,
+    tagline: "Shop fresh produce from local farmers.",
+    apiBase: "/user",
+    nameField: "userName",
+    emailField: "email",
+    passwordField: "password",
+    locationField: "userLocation",
+    redirect: "/",
+    image: "https://plus.unsplash.com/premium_photo-1661964436517-d977254ad1fe?q=80&w=1400&auto=format&fit=crop",
+    quote: "Fresh produce,\ndelivered to your door.",
+    quoteCaption: "Join thousands of happy customers receiving farm-fresh goodness daily.",
+  },
+  farmer: {
+    label: "Farmer",
+    icon: FaTractor,
+    tagline: "Sell your harvest directly to consumers.",
+    apiBase: "/farmer",
+    nameField: "farmerName",
+    emailField: "farmerEmail",
+    passwordField: "farmerPassword",
+    locationField: "farmerLocation",
+    redirect: "/farmer/dashboard",
+    image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=1400&auto=format&fit=crop",
+    quote: "Grow more,\nearns more.",
+    quoteCaption: "Connect directly with buyers and get fair prices for your produce.",
+  },
+};
+
+/* ─── Location modal ──────────────────────────────────── */
+const LocationModal = ({ open, error, onManual, onClose }) => (
+  <Modal backdrop="static" keyboard={false} open={open} onClose={onClose}
+    className="fixed inset-0 z-[60] flex items-center justify-center">
+    <div className="bg-white rounded-2xl shadow-2xl w-11/12 sm:w-96 overflow-hidden absolute left-1/2 -translate-x-1/2 top-1/4">
+      <div className="bg-cream-dark px-6 py-5 flex items-center gap-3">
+        <FaMapMarkerAlt className="text-orange" size={18} />
+        <h2 className="font-serif text-lg font-bold text-dark">Fetching Location</h2>
+      </div>
+      <div className="p-6 text-center">
+        <p className="text-muted text-sm leading-relaxed">
+          We're determining your location to find nearby farmers. This takes a few seconds.
+        </p>
+        {error && <p className="text-red-500 text-xs mt-3">{error}</p>}
+        <button onClick={onManual}
+          className="mt-4 px-6 py-2 bg-dark text-white rounded-full text-sm font-semibold hover:bg-dark/80 transition-colors">
+          Enter Manually
+        </button>
+      </div>
+      <div className="bg-cream-dark px-6 py-4 flex justify-center">
+        <button onClick={onClose}
+          className="px-8 py-2.5 bg-orange text-white rounded-full text-sm font-semibold hover:bg-orange-hover transition-colors shadow-md">
+          Continue
+        </button>
+      </div>
+    </div>
+  </Modal>
+);
+
+/* ─── Main component ──────────────────────────────────── */
 const Register = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Role: consumer | farmer  (pre-select via ?role=farmer)
+  const initialRole = searchParams.get("role") === "farmer" ? "farmer" : "consumer";
+  const [role, setRole] = useState(initialRole);
   const [isLogin, setIsLogin] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [locationError, setLocationError] = useState("");
-  const locationRef = useRef(null);
 
+  const locationRef = useRef(null);
   const nameRef = useRef();
   const emailRef = useRef();
   const passwordRef = useRef();
 
-  const handleNavigate = () => {
-    navigate("/");
-  };
+  const cfg = ROLES[role];
 
+  /* Location fetch — only needed for consumer registration */
   const fetchLocation = () => {
-    setLoading(true);
+    if (isLogin || role !== "consumer") return;
     setShowModal(true);
-
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        locationRef.current = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-        };
-        console.log("Location fetched: ", locationRef.current);
+      (pos) => {
+        locationRef.current = { latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy };
         setLocationError("");
       },
-      (error) => {
-        console.error("Error fetching location: ", error);
-        setLocationError(
-          "Unable to get location. Please enter your location manually."
-        );
-      }
+      () => setLocationError("Unable to get location. Please enter manually.")
     );
-
-    setTimeout(() => {
-      setShowModal(false);
-      setLoading(false);
-    }, 3000);
+    setTimeout(() => { setShowModal(false); }, 3000);
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setLoading(false);
-  };
+  // Reset form state when role changes
+  useEffect(() => {
+    setIsLogin(false);
+    setError("");
+    locationRef.current = null;
+    if (nameRef.current) nameRef.current.value = "";
+    if (emailRef.current) emailRef.current.value = "";
+    if (passwordRef.current) passwordRef.current.value = "";
+  }, [role]);
 
-  const handleManualLocation = () => {
-    locationRef.current = {
-      latitude: "Manual Latitude",
-      longitude: "Manual Longitude",
-    };
-    setLocationError(null);
-  };
+  // Fetch location when switching to consumer register
+  useEffect(() => { fetchLocation(); }, [isLogin, role]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (
-      !emailRef.current?.value ||
-      !passwordRef.current?.value ||
-      (!isLogin && !nameRef.current?.value)
-    ) {
-      alert("All fields are required!");
-      return;
+    setError("");
+    if (!emailRef.current?.value || !passwordRef.current?.value || (!isLogin && !nameRef.current?.value)) {
+      setError("All fields are required."); return;
     }
-
     setLoading(true);
 
     const formData = {
-      userName: nameRef.current?.value || "",
-      email: emailRef.current.value,
-      password: passwordRef.current.value,
-      userLocation: locationRef.current,
+      [cfg.nameField]: nameRef.current?.value || "",
+      [cfg.emailField]: emailRef.current.value,
+      [cfg.passwordField]: passwordRef.current.value,
+      ...(role === "consumer" && !isLogin ? { [cfg.locationField]: locationRef.current } : {}),
+      ...(role === "farmer" && !isLogin ? { [cfg.locationField]: locationRef.current } : {}),
     };
 
-    let isMounted = true;
-
     try {
-
-      const response = await axios.post(
-        `/user/${isLogin ? "login" : "register"}`,
-        formData
-      );
-      console.log("Response Data: ", response.data);
-
-      if (isMounted && response.status === 200) {
-        if (isLogin) {
-          const token = response.data.token;
-          const user = response.data.user;
-          console.log("User: ", user);
-          login(token);
-        }
-        if (nameRef.current) nameRef.current.value = "";
-        if (emailRef.current) emailRef.current.value = "";
-        if (passwordRef.current) passwordRef.current.value = "";
-        if (locationRef.current) locationRef.current = "";
-        navigate("/");
+      const response = await axios.post(`${cfg.apiBase}/${isLogin ? "login" : "register"}`, formData);
+      if (response.status === 200) {
+        login(response.data.token);
+        navigate(cfg.redirect);
       }
-    } catch (error) {
-      console.error(
-        `Error while ${isLogin ? "logging in" : "registering"}!`,
-        error
-      );
+    } catch (err) {
+      setError(err.response?.data?.message || `${isLogin ? "Login" : "Registration"} failed. Please try again.`);
+      console.error(err);
     } finally {
-      isMounted = false;
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (!isLogin) {
-      fetchLocation();
-    }
-  }, [isLogin]);
-
   return (
-    <div
-      style={{
-        backgroundImage:
-          "url(https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)",
-      }}
-
-      className="h-screen w-full flex justify-center items-center relative bg-cover"
-    >
-      <div
-        onClick={handleNavigate}
-        className="absolute lg:h-11 lg:w-11 h-8 w-8 rounded-full bg-black flex justify-center items-center left-2  top-1 sm:left-6 sm:top-6 hover:scale-105 cursor-pointer"
-      >
-        <FaArrowLeftLong className="text-md sm:text-xl" color="white" />
-      </div>
-
-      {/* Loading Overlay */}
+    <div className="min-h-screen w-full bg-cream flex">
+      {/* Loading overlay */}
       {loading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <PuffLoader color="#0d331c" size={150} />
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center">
+          <PuffLoader color="#E8621A" size={90} />
         </div>
       )}
 
-      {/* Location Fetching Modal */}
-      <Modal
-        backdrop="static"
-        keyboard={false}
+      {/* Location modal (consumer register only) */}
+      <LocationModal
         open={showModal}
-        onClose={handleCloseModal}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      >
-        <div className="bg-white rounded-xl shadow-lg w-11/12 sm:w-1/3 overflow-hidden absolute left-[5%] lg:left-[30vw] top-[10%]">
-          <div className="bg-gray-100 border-b border-gray-200 p-6 text-center">
-            <h2 className="text-xl font-semibold text-gray-800">
-              Fetching Location
-            </h2>
-          </div>
-          <div className="p-6 bg-white text-center">
-            <p className="text-gray-600 text-lg">
-              We are determining your location to enhance your experience. This
-              might take a few seconds.
-            </p>
-            {locationError && (
-              <p className="text-red-500 text-sm mt-4">{locationError}</p>
-            )}
-            <button
-              onClick={handleManualLocation}
-              className="bg-blue-500 text-white font-medium px-6 py-2 rounded-full shadow-md hover:bg-blue-600 mt-4"
-            >
-              Enter Location Manually
-            </button>
-          </div>
-          <div className="bg-gray-100 border-t border-gray-200 p-6 flex justify-center">
-            <button
-              onClick={handleCloseModal}
-              className="bg-green-500 text-white font-medium px-6 py-2 rounded-full shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition-all duration-200"
-            >
-              Close
-            </button>
-          </div>
+        error={locationError}
+        onManual={() => { locationRef.current = { latitude: "Manual", longitude: "Manual" }; setLocationError(""); }}
+        onClose={() => setShowModal(false)}
+      />
+
+      {/* ── Left: Form panel ──────────────────────── */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-6 sm:px-12 lg:px-20 py-16 relative">
+        {/* Back btn */}
+        <button onClick={() => navigate("/")}
+          className="absolute top-6 left-6 flex items-center gap-2 text-muted hover:text-dark transition-colors text-sm font-medium">
+          <FaArrowLeftLong size={13} /> Back
+        </button>
+
+        {/* Logo */}
+        <div className="flex items-center gap-2 mb-10">
+          <RiLeafFill size={22} className="text-orange" />
+          <span className="font-serif text-2xl font-bold text-dark">farm<span className="italic text-orange">isto</span></span>
         </div>
-      </Modal>
 
-      {/* Form Section */}
-      <div className="w-[90%] sm:w-[80%] h-[87%] sm:h-[95%] flex flex-col sm:flex-row rounded-xl overflow-hidden mx-auto bg-white shadow-lg">
-        <div className="h-full w-full sm:w-1/2 bg-white flex flex-col sm:mt-10 items-center p-2">
-          <span className="relative flex w-32 mt-5 sm:ml-14 ml-20 sm:mt-5">
-            <span className="h-12 w-12 border-[2px] border-[#0d331c] rounded-full"></span>
-            <span className="absolute left-3 h-12 w-12 flex justify-center items-center rounded-full bg-black">
-              <RiLeafFill size={27} color="#fff" />
-            </span>
-          </span>
+        <div className="w-full max-w-md">
 
-          <h1 className="text-4xl sm:text-5xl font-bold mt-2 sm:mt-2 font-[kurale]">
-            {isLogin ? "Log In" : "Sign Up"}
+          {/* ── Role Tab Switcher ── */}
+          <div className="flex bg-cream-dark rounded-2xl p-1 mb-8">
+            {Object.entries(ROLES).map(([key, r]) => (
+              <button
+                key={key}
+                onClick={() => setRole(key)}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  role === key
+                    ? "bg-dark text-white shadow-md"
+                    : "text-muted hover:text-dark"
+                }`}
+              >
+                <r.icon size={15} />
+                {r.label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── Header ── */}
+          <h1 className="font-serif text-4xl sm:text-5xl font-bold text-dark mb-2">
+            {isLogin ? "Welcome back." : `Join as a\n${cfg.label}.`}
           </h1>
-          <p className="text-md font-medium text-zinc-400 mt-6 font-[kurale] sm:text-left text-center">
-            Welcome to Farmisto -{" "}
-            {isLogin ? "Log in to your account" : "Let's create an account"}
+          <p className="text-muted text-base mb-2">
+            {isLogin ? `Log in to your ${cfg.label.toLowerCase()} account.` : cfg.tagline}
           </p>
-          <div className="w-full flex sm:flex-row items-center justify-center gap-4 mt-3 px-10">
-            <button className="lg:w-full sm:w-auto flex justify-center items-center hover:bg-zinc-100 gap-3 p-3 border-[1px] border-zinc-500 lg:rounded-2xl rounded-full">
-              <FcGoogle size={22} />
-              <span className="hidden lg:block text-md font-medium text-black">
-                Log in with Google
-              </span>
-            </button>
-            <button className="lg:w-full sm:w-auto flex justify-center items-center hover:bg-zinc-100 gap-3 p-3 border-[1px] border-zinc-500 lg:rounded-2xl rounded-full">
-              <FaApple size={22} />
-              <span className="hidden lg:block text-md font-medium text-black">
-                Log in with Apple
-              </span>
+
+          {/* Role capability hint */}
+          {!isLogin && (
+            <div className={`mb-8 px-4 py-3 rounded-xl text-sm font-medium border ${
+              role === "farmer"
+                ? "bg-orange/10 border-orange/30 text-orange"
+                : "bg-dark/5 border-dark/10 text-dark"
+            }`}>
+              {role === "farmer"
+                ? "🚜 You'll get access to the Farmer Dashboard — manage orders, listings & earnings."
+                : "🛒 You'll be able to browse the market, place orders & track deliveries."}
+            </div>
+          )}
+          {isLogin && <div className="mb-8" />}
+
+          {/* Social sign-in */}
+          <div className="flex gap-3 mb-6">
+            <button className="flex-1 flex items-center justify-center gap-2 py-3 border border-cream-dark rounded-xl text-sm font-medium text-dark bg-white hover:bg-cream-dark/50 transition-colors">
+              <FcGoogle size={17} /> Google
             </button>
           </div>
 
-          {locationError && (
-            <p className="text-red-500 text-sm mt-2">{locationError}</p>
-          )}
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex-1 h-px bg-cream-dark" />
+            <span className="text-xs text-muted font-medium">or continue with email</span>
+            <div className="flex-1 h-px bg-cream-dark" />
+          </div>
 
-          {/* Registration/Login Form */}
-          <form
-            className="w-full sm:mt-5 mt-2 px-6 sm:px-10"
-            onSubmit={handleSubmit}
-          >
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
-              <input
-                ref={nameRef}
-                type="text"
-                name="name"
-                placeholder="Name"
-                className="w-full py-3 px-5 border-[1px] border-zinc-500 rounded-2xl focus:outline-none mt-4"
-                aria-label="Name"
+              <input ref={nameRef} type="text"
+                placeholder={role === "farmer" ? "Farm / Full Name" : "Full Name"}
+                className="w-full px-5 py-3.5 border border-cream-dark rounded-xl bg-white text-dark placeholder-muted focus:outline-none focus:border-orange transition-colors text-sm"
               />
             )}
-            <input
-              ref={emailRef}
-              type="text"
-              name="email"
-              placeholder="Email"
-              className="w-full py-3 px-5 border-[1px] border-zinc-500 rounded-2xl focus:outline-none mt-4"
-              aria-label="Email"
+            <input ref={emailRef} type="email" placeholder="Email Address"
+              className="w-full px-5 py-3.5 border border-cream-dark rounded-xl bg-white text-dark placeholder-muted focus:outline-none focus:border-orange transition-colors text-sm"
             />
-            <input
-              ref={passwordRef}
-              type="password"
-              name="password"
-              placeholder="Password"
-              className="w-full py-3 px-5 border-[1px] border-zinc-500 rounded-2xl focus:outline-none mt-4"
-              aria-label="Password"
+            <input ref={passwordRef} type="password" placeholder="Password"
+              className="w-full px-5 py-3.5 border border-cream-dark rounded-xl bg-white text-dark placeholder-muted focus:outline-none focus:border-orange transition-colors text-sm"
             />
-            <button
-              className="w-full h-14 mt-8 sm:mt-4 rounded-xl bg-black text-white font-semibold relative"
-              type="submit"
-              disabled={loading}
-            >
-              {isLogin ? "Log In" : "Sign Up"}
+            {error && (
+              <p className="text-red-500 text-xs font-medium px-1">{error}</p>
+            )}
+            <button type="submit" disabled={loading}
+              className="w-full py-4 bg-orange text-white font-semibold rounded-xl hover:bg-orange-hover transition-colors text-base mt-2 disabled:opacity-60 shadow-md">
+              {isLogin ? "Log In" : `Create ${cfg.label} Account`}
             </button>
-            <p className="mt-4 text-center text-sm text-gray-600">
-              {isLogin ? "Don't have an account? " : "Already registered? "}
-              <span
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-green-600 font-medium cursor-pointer hover:underline"
-              >
-                {isLogin ? "Sign Up" : "Log In"}
-              </span>
-            </p>
           </form>
-        </div>
 
-        {/* Image Section */}
-        <div className="h-full w-full sm:w-1/2 bg-white p-2 sm:p-5">
-          <img
-            src="https://plus.unsplash.com/premium_photo-1661964436517-d977254ad1fe?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            className="h-full w-full object-cover rounded-lg hidden sm:block"
-            alt="Background"
-          />
+          <p className="text-center text-sm text-muted mt-6">
+            {isLogin ? "Don't have an account? " : "Already registered? "}
+            <button onClick={() => setIsLogin(!isLogin)} className="text-orange font-semibold hover:underline">
+              {isLogin ? "Sign Up" : "Log In"}
+            </button>
+          </p>
+
+          {/* Switch role prompt */}
+          <p className="text-center text-xs text-muted mt-3">
+            {role === "farmer" ? "Shopping instead? " : "Are you a farmer? "}
+            <button onClick={() => setRole(role === "farmer" ? "consumer" : "farmer")}
+              className="text-dark font-semibold hover:text-orange transition-colors">
+              {role === "farmer" ? "Switch to Consumer" : "Join as Farmer"}
+            </button>
+          </p>
+        </div>
+      </div>
+
+      {/* ── Right: Image panel ────────────────────── */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        <img
+          src={cfg.image}
+          className="w-full h-full object-cover transition-all duration-700"
+          alt={cfg.label}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-dark/70 via-dark/20 to-transparent flex flex-col justify-end p-12">
+          {/* Role badge */}
+          <span className="inline-flex items-center gap-2 mb-4 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold w-fit">
+            <cfg.icon size={14} /> {cfg.label} Portal
+          </span>
+          <p className="font-serif text-4xl font-bold text-white leading-tight mb-4 whitespace-pre-line">
+            {cfg.quote}
+          </p>
+          <p className="text-white/70 text-base">{cfg.quoteCaption}</p>
         </div>
       </div>
     </div>

@@ -1,53 +1,26 @@
-import React, { useState } from "react";
+import React from "react";
 import NavBar from "../../Components/NavBar/NavBar";
-import Header from "../../Components/Header/HomeHeader";
-import CircularOverlay from "../../Components/Minor/CircularOverlay";
-import Story from "../../Components/Story/Story";
-import FeaturedProduct from "../../Components/FeaturedProduct/FeaturedProduct";
-import HowItWorks from "../../Components/Minor/HowItWorks";
+import HomeHeader from "../../Components/Header/HomeHeader";
 import Footer from "../../Components/Footer/Footer";
-import Trusted from "../../Components/Header/Trusted";
-import SideBar from "../../Components/SideBar/SideBar";
+import {
+  MarqueeStrip,
+  ProduceShowcase,
+  AvocadoFeature,
+  ProduceGrid,
+  Testimonials,
+} from "../../Components/HomeSections/HomeSections";
 
 const Home = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const images = [
-    {
-      src: "https://picsum.photos/id/1040/300/300",
-      alt: "a house on a mountain",
-    },
-    { src: "https://picsum.photos/id/106/300/300", alt: "some pink flowers" },
-    {
-      src: "https://picsum.photos/id/136/300/300",
-      alt: "big rocks with some trees",
-    },
-    {
-      src: "https://picsum.photos/id/1039/300/300",
-      alt: "a waterfall, a lot of trees and a great view from the sky",
-    },
-    { src: "https://picsum.photos/id/110/300/300", alt: "a cool landscape" },
-    {
-      src: "https://picsum.photos/id/1047/300/300",
-      alt: "inside a town between two big buildings",
-    },
-    {
-      src: "https://picsum.photos/id/1057/300/300",
-      alt: "a great view of the sea above the mountain",
-    },
-  ];
   return (
-    <div className="relative w-full h-full">
-      <CircularOverlay />
-      <NavBar transparent={false} />
-      <Header />
-      <Trusted/>
-      <main>
-        <Story />
-        <FeaturedProduct />
-
-        {/* <HowItWorks images={images} /> */}
-      </main>
-      <Footer/>
+    <div className="relative w-full min-h-screen bg-cream">
+      <NavBar />
+      <HomeHeader />
+      <MarqueeStrip />
+      <ProduceShowcase />
+      <AvocadoFeature />
+      <ProduceGrid />
+      <Testimonials />
+      <Footer />
     </div>
   );
 };

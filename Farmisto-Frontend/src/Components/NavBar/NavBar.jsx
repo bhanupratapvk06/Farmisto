@@ -1,114 +1,103 @@
 import React, { useState } from "react";
-import {  FaCartShopping, FaUser } from "react-icons/fa6";
-import { BsFillDoorOpenFill } from "react-icons/bs";
-import { CgMenu } from "react-icons/cg";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../utils/Auth";
-import { motion } from "framer-motion";
-import SideBar from "../SideBar/SideBar";
+import { FiSearch, FiUser, FiShoppingCart, FiMenu, FiX } from "react-icons/fi";
 
-const NavBar = ({ transparent = false }) => {
+const NavBar = () => {
   const { authToken, logout } = useAuth();
-  const [active, setActive] = useState(0);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const tabs = [
-    { label: "Home", path: "/" },
-    { label: "MarketPlace", path: "/market" },
+  const navLinks = [
+    { label: "About", path: "/about" },
     { label: "Nearby Farmers", path: "/farmers" },
+    { label: "FAQ", path: "/faq" },
+    { label: "Contact", path: "/contact" },
+    { label: "Market", path: "/market" },
   ];
 
   return (
-    <div
-      className={`w-full px-4 sm:px-6 md:px-8 lg:px-12 py-3 sm:py-4 md:py-5 flex justify-between items-center transition-all duration-300 ${
-        transparent ? "bg-transparent" : ""
-      }`}
-    >
-    
-      <h1 className="text-3xl sm:text-4xl font-black font-[Aladin] text-[#0d331c] z-10">
-        Farmisto
-      </h1>
+    <nav className="w-full bg-cream px-6 md:px-10 lg:px-16 py-4 flex items-center justify-between relative z-50 border-b border-cream-dark">
+      {/* Logo */}
+      <Link to="/" className="flex-shrink-0">
+        <span className="font-serif text-2xl font-bold text-dark tracking-tight">
+          farm<span className="italic text-orange">isto</span>
+        </span>
+      </Link>
 
-      <div className="hidden md:flex gap-4 lg:gap-8">
-        {tabs.map((tab, index) => (
+      {/* Desktop Links */}
+      <div className="hidden md:flex items-center gap-7 lg:gap-10">
+        {navLinks.map((link, i) => (
           <Link
-            to={tab.path}
-            key={index}
-            className={`text-base sm:text-lg md:text-xl lg:text-2xl flex flex-col gap-1 text-green-800 font-semibold hover:text-emerald-700 transition-colors duration-200`}
-            onMouseEnter={() => setActive(index)}
+            key={i}
+            to={link.path}
+            className={`text-sm font-medium transition-colors duration-200 ${
+              location.pathname === link.path
+                ? "text-dark font-semibold"
+                : "text-muted hover:text-dark"
+            }`}
           >
-            {tab.label}
-            {active === index && (
-              <motion.span
-                initial={{ width: "0%" }}
-                animate={{ width: "100%" }}
-                whileHover={{ width: "100%" }}
-                transition={{
-                  type: "linear",
-                  stiffness: 150,
-                  mass: 1,
-                  duration: 0.3,
-                }}
-                className="bg-emerald-800 shadow-lg shadow-emerald-100 h-0.5 sm:h-1 md:h-[4px] block mx-auto rounded-sm"
-              />
-            )}
+            {link.label}
           </Link>
         ))}
       </div>
 
-      {/* Icons Section */}
-      <div className="flex items-center">
-        <div className="h-9 sm:h-10 md:h-12 px-1 mr-2 sm:mr-0 flex items-center justify-center gap-2 bg-[#0d331c] text-emerald-800 rounded-full">
-          {authToken ? (
-            <div
-              onClick={() => logout()}
-              className="h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10 flex items-center justify-center bg-green-50 rounded-full hover:scale-110 transition-all duration-300 hover:cursor-pointer"
-            >
-              <BsFillDoorOpenFill
-                size={14}
-                className="sm:size-3 md:size-5"
-                color="#0d331c"
-              />
-            </div>
-          ) : (
-            <Link
-              to={"/form"}
-              className="h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10 flex items-center justify-center bg-green-50 rounded-full hover:scale-110 transition-all duration-300 hover:cursor-pointer"
-            >
-              <FaUser
-                className="sm:size-3 md:size-5"
-                color="#0d331c"
-              />
-            </Link>
-          )}
-          <Link
-            to={"/cart"}
-            className="h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10 flex items-center justify-center bg-green-50 rounded-full hover:scale-110 transition-all duration-300"
+      {/* Right Icons */}
+      <div className="flex items-center gap-3">
+        <button className="hidden md:flex items-center justify-center w-9 h-9 rounded-full hover:bg-cream-dark transition-colors text-dark">
+          <FiSearch size={18} />
+        </button>
+        <button className="hidden md:flex items-center justify-center w-9 h-9 rounded-full hover:bg-cream-dark transition-colors text-dark">
+          <FiUser size={18} />
+        </button>
+        <Link to="/cart" className="hidden md:flex items-center justify-center w-9 h-9 rounded-full hover:bg-cream-dark transition-colors text-dark">
+          <FiShoppingCart size={18} />
+        </Link>
+        {authToken ? (
+          <button
+            onClick={logout}
+            className="hidden md:inline-flex items-center px-5 py-2 rounded-full bg-dark text-cream text-sm font-semibold hover:bg-dark/90 transition-colors"
           >
-            <FaCartShopping
-              className="sm:size-3 md:size-5"
-              color="#0d331c"
-            />
+            Log Out
+          </button>
+        ) : (
+          <Link
+            to="/form"
+            className="hidden md:inline-flex items-center px-5 py-2 rounded-full bg-dark text-cream text-sm font-semibold hover:bg-dark/90 transition-colors"
+          >
+            Get Started
           </Link>
-        </div>
+        )}
 
-        <button
-          className="md:hidden text-green-800 font-semibold text-lg sm:text-xl"
-          onClick={() => setIsSidebarOpen(true)}
-        >
-          <CgMenu size={30}/>
+        {/* Mobile Menu Toggle */}
+        <button className="md:hidden text-dark" onClick={() => setMenuOpen(!menuOpen)}>
+          {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
         </button>
       </div>
 
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
+      {/* Mobile Drawer */}
+      {menuOpen && (
+        <div className="absolute top-full left-0 w-full bg-cream shadow-lg py-6 flex flex-col gap-4 px-8 md:hidden z-50 border-t border-cream-dark">
+          {navLinks.map((link, i) => (
+            <Link
+              key={i}
+              to={link.path}
+              onClick={() => setMenuOpen(false)}
+              className="text-base font-medium text-dark hover:text-orange transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
+          <div className="flex gap-3 pt-4 border-t border-cream-dark">
+            <Link to="/cart" className="text-muted hover:text-dark"><FiShoppingCart size={20} /></Link>
+            {authToken
+              ? <button onClick={logout} className="text-orange font-semibold">Log Out</button>
+              : <Link to="/form" className="text-orange font-semibold">Sign Up</Link>
+            }
+          </div>
+        </div>
       )}
-
-      <SideBar isOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
-    </div>
+    </nav>
   );
 };
 
