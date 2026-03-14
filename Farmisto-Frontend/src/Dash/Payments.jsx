@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "../../utils/axios";
-import { useAuth } from "../../utils/Auth";
+import axios from "../utils/axios";
+import { useAuth } from "../utils/Auth";
 import { FaWallet, FaCheckCircle, FaClock } from "react-icons/fa";
 
 const StatCard = ({ icon: Icon, label, value, color }) => (
@@ -93,13 +93,12 @@ const Payments = () => {
               <span className="text-xs font-mono text-muted truncate">{p._id?.slice(-8)?.toUpperCase()}</span>
               <span className="font-semibold text-dark text-sm">₹{Number(p.totalAmount || 0).toLocaleString("en-IN")}</span>
               <span className="text-sm text-muted capitalize">{p.paymentMethod || "—"}</span>
-              <span className={`text-xs font-bold px-2.5 py-1 rounded-full w-fit ${
-                p.orderStatus === "Delivered"
-                  ? "bg-green-100 text-green-700"
-                  : p.orderStatus === "Processing"
+              <span className={`text-xs font-bold px-2.5 py-1 rounded-full w-fit ${p.orderStatus === "Delivered"
+                ? "bg-green-100 text-green-700"
+                : p.orderStatus === "Processing"
                   ? "bg-orange/10 text-orange"
                   : "bg-cream-dark text-muted"
-              }`}>
+                }`}>
                 {p.orderStatus || "Pending"}
               </span>
             </div>
