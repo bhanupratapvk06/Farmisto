@@ -1,6 +1,6 @@
 const express = require('express');
 const {FarmerRegister , FarmerLogin, getProfile, updateProfile, editPassword, GetDashboard, GetFarmerLocation} = require('../controllers/FarmerController');
-const { getPaymentSettings, updatePaymentSettings, submitFeedback } = require('../controllers/FarmerSettingsController.s');
+const { getPaymentSettings, updatePaymentSettings, submitFeedback } = require('../controllers/FarmerSettingsController.js');
 const Authentication = require('../middleware/Authentication');
 const router = express.Router();
 const upload = require('../config/multer')
