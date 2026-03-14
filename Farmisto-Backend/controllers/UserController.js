@@ -26,6 +26,8 @@ const UserRegister = async (req, res) => {
       userLocation: userLocation,
     });
 
+    const token = GenerateToken(user);
+
     res.status(200).json({ msg: "User registered successfully", User: user, token });
   } catch (error) {
     console.error(error);

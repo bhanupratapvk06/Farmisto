@@ -11,7 +11,7 @@ const GenerateToken = (person) => {
       name: person.userName || person.farmerName,
       location: person.userLocation || person.farmerLocation,
     },
-    process.env.SECRET_KEY,
+    process.env.JWT_SECRET,
     { expiresIn: "3d" }
   );
   return token;
@@ -24,7 +24,7 @@ const verifyToken = async(token) => {
     return { success: false, error: "Invalid token format" };
   }
   try {
-    const person = JWT.verify(token, process.env.SECRET_KEY);
+    const person = JWT.verify(token, process.env.JWT_SECRET);
     return person;
   } catch (err) {
     console.error("Error verifying token:", err.message);
