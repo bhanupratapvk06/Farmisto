@@ -60,11 +60,12 @@ const PaymentSettings = () => {
     e.preventDefault();
     const fieldsToUpdate = Object.keys(formData).filter(f => editFields[f]);
     if (fieldsToUpdate.length === 0) { alert("No fields selected for update."); return; }
-    const fd = new FormData();
-    fieldsToUpdate.forEach(f => fd.append(f, formData[f]));
+    // Build plain JSON object (backend reads req.body directly, not FormData)
+    const payload = {};
+    fieldsToUpdate.forEach(f => { payload[f] = formData[f]; });
     try {
-      const response = await axios.patch("/farmer/settings/update-payment", fd, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}`, "Content-Type": "multipart/form-data" },
+      const response = await axios.patch("/farmer/settings/update-payment", payload, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
       });
       if (response.status === 200) { setSuccess(true); setTimeout(() => setSuccess(false), 3000); await fetchDefaultData(); }
     } catch (error) { console.error("Error updating payment settings:", error); }

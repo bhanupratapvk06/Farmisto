@@ -1,8 +1,9 @@
 const mongoose = require("mongoose");
 const Payment = require("../models/Payment");
 const pdf = require("pdfkit");
+const asyncHandler = require("../middleware/asyncHandler");
 
-const createPayment = async (req, res) => {
+const createPayment = asyncHandler(async (req, res) => {
   try {
     const { cartItems, address, farmers } = req.body;
 
@@ -182,48 +183,35 @@ const createPayment = async (req, res) => {
     console.error("Error creating payment:", error.message);
     return res.status(500).json({ message: "Server error" });
   }
-};
+});
 
-const GetPayments = async (req, res) => {
-  try {
-    const payments = await Payment.find({ "farmers.email": req.user.email });
+const GetPayments = asyncHandler(async (req, res) => {
+  const payments = await Payment.find({ "farmers.email": req.user.email });
 
-    if (!payments || payments.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No payments found for this farmer" });
-    }
-
-    res.status(200).json({ message: "Payments Fetched Successfully! ", payments });
-  } catch (error) {
-    console.error("Error getting payments:", error.message);
-    return res.status(500).json({ message: "Server error" });
+  if (!payments || payments.length === 0) {
+    return res.status(404).json({ message: "No payments found for this farmer" });
   }
-};
+
+  return res.status(200).json({ message: "Payments Fetched Successfully!", payments });
+});
 
 const ALLOWED_UPDATE_FIELDS = ["orderStatus", "paymentMethod"];
 
-const UpdatePayment = async (req, res) => {
-  try {
-    const { field, value, id } = req.body;
-    if (!ALLOWED_UPDATE_FIELDS.includes(field)) {
-      return res.status(400).json({ message: `Field '${field}' cannot be updated` });
-    }
-    const payment = await Payment.findByIdAndUpdate(
-      { _id: id },
-      { [field]: value },
-      { new: true }
-    );
-    if (!payment) {
-      return res.status(404).json({ message: "Payment not found" });
-    }
-    return res.status(200).json(payment);
+const UpdatePayment = asyncHandler(async (req, res) => {
+  const { field, value, id } = req.body;
+  if (!ALLOWED_UPDATE_FIELDS.includes(field)) {
+    return res.status(400).json({ message: `Field '${field}' cannot be updated` });
   }
-  catch (error) {
-    console.error("Error updating payment:", error.message);
-    return res.status(500).json({ message: "Server error" });
+  const payment = await Payment.findByIdAndUpdate(
+    { _id: id },
+    { [field]: value },
+    { new: true }
+  );
+  if (!payment) {
+    return res.status(404).json({ message: "Payment not found" });
   }
-};
+  return res.status(200).json({ message: "Payment updated", payment });
+});
 
 
 module.exports = { createPayment, GetPayments, UpdatePayment };

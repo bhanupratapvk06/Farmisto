@@ -65,7 +65,11 @@ const BuyBlock = () => {
     let filtered = allProducts;
     if (selectedCategory) filtered = filtered.filter(p => p.itemCategory === selectedCategory);
     if (selectedKind) filtered = filtered.filter(p => p.itemType === selectedKind);
-    if (searchTerm) filtered = filtered.filter(p => p.itemName.toLowerCase().includes(searchTerm.toLowerCase()) || p.itemCategory.toLowerCase().includes(searchTerm.toLowerCase()) || p.farmerName.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (searchTerm) filtered = filtered.filter(p =>
+      p.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.itemCategory.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.seller?.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+    );
     setProducts(filtered);
   };
 
@@ -94,8 +98,8 @@ const BuyBlock = () => {
                 </div>
                 <div className="flex-1">
                   <h2 className="font-serif text-xl font-bold text-dark">{selectedProduct.itemName}</h2>
-                  <p className="text-sm text-muted mt-1">From: <span className="text-dark font-semibold">{selectedProduct.farmerName}</span></p>
-                  <p className="text-sm text-muted mt-1">₹{selectedProduct.itemPrice} / {selectedProduct.unit}</p>
+                  <p className="text-sm text-muted mt-1">From: <span className="text-dark font-semibold">{selectedProduct.seller?.name}</span></p>
+                  <p className="text-sm text-muted mt-1">₹{selectedProduct.itemPrice} / {selectedProduct.itemUnit?.unit}</p>
                   <div className="flex items-center gap-2 mt-3">
                     <button onClick={() => handleQuantityChange(-1)} className="w-8 h-8 flex items-center justify-center bg-cream-dark rounded-lg hover:bg-orange hover:text-white transition-colors"><FaMinus size={10} /></button>
                     <span className="w-10 text-center font-bold text-dark">{quantity}</span>

@@ -6,10 +6,11 @@ const fs = require("fs/promises");
 const path = require("path");
 const FormData = require("form-data");
 const streamifier = require("streamifier");
+const asyncHandler = require("../middleware/asyncHandler");
 
 const REMOVE_BG_API_KEY = '9oT87irw47jn9XUmB6mg9rGq';
 
-const AddItem = async (req, res) => {
+const AddItem = asyncHandler(async (req, res) => {
   const { itemName, itemPrice, itemCategory,itemType,quantity,unit,itemValue } = req.body;
 
   if (!itemName || !itemPrice || !itemCategory || !itemType || !quantity || !unit || ! itemValue) {
@@ -86,9 +87,9 @@ const AddItem = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ message: "Error while adding the item!", error: error.message });
   }
-};
+});
 
-const DeleteItem = async (req, res) => {
+const DeleteItem = asyncHandler(async (req, res) => {
   const { itemId } = req.body;
 
   if (!itemId) {
@@ -104,32 +105,23 @@ const DeleteItem = async (req, res) => {
   } catch (error) {
     return res.status(500).json({ message: "Error while deleting the item!", error: error.message });
   }
-};
+});
 
-const GetItems = async (req, res) => {
-  try {
-    const items = await Market.find({});
-    console.log(items);
-    if (!items.length) {
-      return res.status(200).json({ message: "No items available!" });
-    }
-    return res.status(200).json({ message: "Items fetched successfully!", items });
-  } catch (error) {
-    return res.status(500).json({ message: "Error while fetching items!", error: error.message });
+const GetItems = asyncHandler(async (req, res) => {
+  const items = await Market.find({});
+  if (!items.length) {
+    return res.status(200).json({ message: "No items available!", items: [] });
   }
-};
+  return res.status(200).json({ message: "Items fetched successfully!", items });
+});
 
-const GetItemsByFarmerEmail = async (req, res) => {
-  try {
-    const items = await Market.find({"seller.email": req.user.email});
-    if (!items.length) {
-      return res.status(200).json({ message: "No items available!" });
-    }
-    return res.status(200).json({ message: "Items fetched successfully!", items });
-  } catch (error) {
-    return res.status(500).json({ message: "Error while fetching items!", error: error.message });
+const GetItemsByFarmerEmail = asyncHandler(async (req, res) => {
+  const items = await Market.find({ "seller.email": req.user.email });
+  if (!items.length) {
+    return res.status(200).json({ message: "No items available!", items: [] });
   }
-};
+  return res.status(200).json({ message: "Items fetched successfully!", items });
+});
 
 module.exports = {
   AddItem,
