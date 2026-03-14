@@ -3,6 +3,7 @@ const Farmer = require("../models/Farmer");
 const { fetchLocation } = require("./GeoController");
 const bcrypt = require("bcryptjs");
 const Payment = require("../models/Payment");
+
 const User = require("../models/User");
 const cloudinary = require("cloudinary").v2;
 const connectCloudinary = require("../config/cloudinary");
