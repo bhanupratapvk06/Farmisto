@@ -6,7 +6,6 @@ const UserRoutes = require("./routes/userRoutes.js");
 const MarketRoutes = require("./routes/MarketRoutes.js");
 const PaymentRoutes = require("./routes/PaymentRoutes.js");
 const PromoRoutes = require("./routes/PromoRoutes.js")
-const { fetchLocation, fetchNearbyFarmers } = require("./controllers/GeoController.js");
 const connectCloudinary = require("./config/cloudinary.js");
 const MongooseConnect = require("./config/Db.js");
 const CartRoutes = require('./routes/cartRoutes.js');
@@ -23,19 +22,8 @@ const app = express();
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      const allowedOrigins = [
-        'http://localhost:5173',
-        'https://farmisto-frontend.vercel.app',
-        'https://farmisto-farmer.vercel.app',
-      ];
-      if (allowedOrigins.includes(origin) || !origin) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
@@ -59,9 +47,6 @@ app.use("/user", UserRoutes);
 app.use("/cart", CartRoutes);
 app.use('/payments',PaymentRoutes)
 app.use("/promo",PromoRoutes);
-app.use("/api/geocode", fetchLocation);
-app.use("/api/geoNearby", fetchNearbyFarmers);
-
 
 app.get("/logout", (req, res) => {
   res.clearCookie("token", {

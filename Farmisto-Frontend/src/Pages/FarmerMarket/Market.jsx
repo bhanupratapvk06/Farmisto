@@ -16,7 +16,7 @@ const Market = () => {
   const [quantities, setQuantities] = useState({});
   const { userDetails } = useAuth();
 
-  const farmerEmail = userDetails?.user.email;
+  const farmerEmail = userDetails?.email;
 
   const fetchFarmer = async () => {
     try {
@@ -87,7 +87,7 @@ const Market = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:4000/user/buy-item",
+         "/user/buy-item",
         item,
         {
           headers: {

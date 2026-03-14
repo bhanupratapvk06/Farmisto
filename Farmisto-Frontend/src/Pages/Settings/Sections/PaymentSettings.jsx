@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaUser, FaCreditCard, FaBuilding, FaMoneyCheckAlt, FaEdit, FaWallet, FaChevronDown, FaChevronUp } from "react-icons/fa";
-import axios from "axios";
+import axios from "../../../utils/axios";
 
 const inputBase = "w-full px-4 py-3 rounded-xl border text-sm text-dark focus:outline-none transition-colors";
 const inputEnabled = "border-cream-dark bg-white focus:border-orange";
@@ -45,7 +45,7 @@ const PaymentSettings = () => {
 
   const fetchDefaultData = async () => {
     try {
-      const response = await axios.get("http://localhost:4000/farmer/settings/payment-data", { headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` } });
+      const response = await axios.get("/farmer/settings/payment-data", { headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` } });
       setFormData(response.data.payment || {});
     } catch (error) { console.error("Error fetching payment data:", error); }
   };
@@ -63,7 +63,7 @@ const PaymentSettings = () => {
     const fd = new FormData();
     fieldsToUpdate.forEach(f => fd.append(f, formData[f]));
     try {
-      const response = await axios.patch("http://localhost:4000/farmer/settings/update-payment", fd, {
+      const response = await axios.patch("/farmer/settings/update-payment", fd, {
         headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}`, "Content-Type": "multipart/form-data" },
       });
       if (response.status === 200) { setSuccess(true); setTimeout(() => setSuccess(false), 3000); await fetchDefaultData(); }

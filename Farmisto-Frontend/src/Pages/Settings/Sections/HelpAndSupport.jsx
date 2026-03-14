@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FaQuestionCircle, FaCommentDots, FaChevronDown, FaChevronUp, FaCheckCircle } from "react-icons/fa";
-import axios from "axios";
+import axios from "../../../utils/axios";
 
 const faqs = [
   { question: "How can I track my weekly or monthly profits?", answer: "Visit 'Profit Tracking' to switch between weekly and monthly views of your earnings from consumer orders." },

@@ -8,7 +8,7 @@ const router = express.Router();
 router.post('/register', UserRegister);
 router.post('/login', UserLogin);
 router.post('/buy-item',Authentication,BuyItem)
-router.post('/get-user/:id',GetUser);
+router.get('/get-user/:id', GetUser);
 router.post('/get-farmer',Authentication,getFarmerByEmail);
 router.get('/fetch-nearby-farmers',Authentication,fetchNearbyFarmers)
 router.post('/get-items-by-farmerId',Authentication,GetItemsByFarmerEmail)

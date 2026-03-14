@@ -194,20 +194,23 @@ const GetPayments = async (req, res) => {
         .json({ message: "No payments found for this farmer" });
     }
 
-    res.status(200).json({message: "Payments Fetched Successfully! ",payments});
+    res.status(200).json({ message: "Payments Fetched Successfully! ", payments });
   } catch (error) {
     console.error("Error getting payments:", error.message);
     return res.status(500).json({ message: "Server error" });
   }
 };
 
-const UpdatePayment = async (req, res) => {
+const ALLOWED_UPDATE_FIELDS = ["orderStatus", "paymentMethod"];
 
-  const { field, value, id } = req.body;
-  console.log("Field:", field, "Value:", value, "Payment ID:", id);
+const UpdatePayment = async (req, res) => {
   try {
+    const { field, value, id } = req.body;
+    if (!ALLOWED_UPDATE_FIELDS.includes(field)) {
+      return res.status(400).json({ message: `Field '${field}' cannot be updated` });
+    }
     const payment = await Payment.findByIdAndUpdate(
-      {_id: id},
+      { _id: id },
       { [field]: value },
       { new: true }
     );
@@ -215,10 +218,12 @@ const UpdatePayment = async (req, res) => {
       return res.status(404).json({ message: "Payment not found" });
     }
     return res.status(200).json(payment);
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error updating payment:", error.message);
     return res.status(500).json({ message: "Server error" });
   }
 };
 
-module.exports = { createPayment, GetPayments, UpdatePayment};
+
+module.exports = { createPayment, GetPayments, UpdatePayment };

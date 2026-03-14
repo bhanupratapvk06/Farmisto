@@ -9,13 +9,13 @@ const UserRegister = async (req, res) => {
   const { userName, email, password, userLocation } = req.body;
 
   if (!email || !password) {
-    res.status(400).json({ msg: "Please enter all fields" });
+    return res.status(400).json({ msg: "Please enter all fields" });
   }
   try {
     const isUserAlreadyRegistered = await User.findOne({ email });
 
     if (isUserAlreadyRegistered) {
-      res.status(400).json({ msg: "User already exists" });
+      return res.status(400).json({ msg: "User already exists" });
     }
     const HashPassword = await hashPassword(password);
 
@@ -26,10 +26,10 @@ const UserRegister = async (req, res) => {
       userLocation: userLocation,
     });
 
-    res.status(200).json({ msg: "User registered successfully", User: user });
+    res.status(200).json({ msg: "User registered successfully", User: user, token });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ msg: "Internal server error" });
+    return res.status(500).json({ msg: "Internal server error" });
   }
 };
 
@@ -102,7 +102,7 @@ const BuyItem = async (req, res) => {
 };
 
 const GetUser = async(req, res) => {
-  const id = req.params.id;
+  const { id } = req.params;
   if (!id) {
     return res.status(400).json({ msg: "No user id provided!" });
   }

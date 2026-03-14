@@ -160,6 +160,7 @@ const ItemDiscountUpdate = async (req, res) => {
 const ItemDelete = async (req, res) => {
   const id = req.params.id;
   if (!id) {
+    
     return res.status(400).json({ message: "No item id provided!" });
   }
   try {
@@ -170,6 +171,7 @@ const ItemDelete = async (req, res) => {
     res.status(200).json({ message: "Item deleted successfully!" });
   } catch (error) {
     console.error("Error deleting item:", error.message);
+    res.status(500).json({ message: "Failed to delete item" });
   }
 };
 
