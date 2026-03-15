@@ -1,69 +1,117 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../Components/NavBar/NavBar";
 import Footer from "../../Components/Footer/Footer";
-import Pagination from "@mui/material/Pagination";
-import { styled } from "@mui/material/styles";
 import axios from "../../utils/axios";
-import { FaSearch, FaMapMarkerAlt, FaLeaf, FaChevronDown, FaShoppingBasket } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { useAuth } from "../../utils/Auth";
+import {
+  FaSearch, FaMapMarkerAlt, FaLeaf, FaStore,
+  FaChevronRight, FaSeedling, FaStar,
+  FaFilter, FaTimes, FaSortAmountDown, FaCheckCircle,
+  FaShoppingBag, FaArrowRight
+} from "react-icons/fa";
+import { BsGrid3X3Gap, BsListUl } from "react-icons/bs";
+import { motion, AnimatePresence } from "framer-motion";
 
-const StyledPagination = styled(Pagination)(() => ({
-  "& .MuiPaginationItem-root": {
-    color: "#1A1A1A",
-    "&:hover": { backgroundColor: "#EDE6D4" },
-    "&.Mui-selected": { backgroundColor: "#E8621A", color: "white", "&:hover": { backgroundColor: "#d05515" } },
-  },
-}));
+const PLACEHOLDER_IMG = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face";
 
-const Sparkle = ({ size = 18, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M12 2C12.3 7.8 16.2 11.7 22 12C16.2 12.3 12.3 16.2 12 22C11.7 16.2 7.8 12.3 2 12C7.8 11.7 11.7 7.8 12 2Z" />
-  </svg>
-);
+const COVER_IMAGES = [
+  "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=600&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=600&h=200&fit=crop",
+];
+
+const CATEGORY_ICONS = {
+  Vegetables: "🥬",
+  Fruits: "🍎",
+  Nuts: "🥜",
+  Dairy: "🥛",
+  Spices: "🌶️",
+  Pulses: "🫘",
+};
 
 const NearbyFarmers = () => {
-  const [farmers, setFarmers] = useState([]);
-  const [filteredFarmers, setFilteredFarmers] = useState([]);
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
+  const { authToken } = useAuth();
   const navigate = useNavigate();
-  const ITEMS_PER_PAGE = 6;
+  const [farmers, setFarmers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [sortBy, setSortBy] = useState("distance");
+  const [viewMode, setViewMode] = useState("grid");
+  const [showFilters, setShowFilters] = useState(false);
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
 
   useEffect(() => {
     const fetchFarmers = async () => {
       setLoading(true);
+      setError(null);
       try {
-        const response = await axios.get(`/user/fetch-nearby-farmers`, { headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` } });
-        setFarmers(response.data.farmers);
-        setFilteredFarmers(response.data.farmers);
-      } catch (error) { console.error("Error fetching farmers:", error); }
-      finally { setLoading(false); }
+        const response = await axios.get("/user/fetch-nearby-farmers", {
+          headers: { Authorization: `Bearer ${authToken}` }
+        });
+        setFarmers(response.data.farmers || []);
+      } catch (err) {
+        console.error("Error fetching farmers:", err);
+        setError("Failed to load nearby farmers. Please try again.");
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchFarmers();
-  }, []);
+    if (authToken) fetchFarmers();
+    else {
+      setLoading(false);
+      setError("Please log in to see nearby farmers.");
+    }
+  }, [authToken]);
 
-  useEffect(() => {
-    let updated = farmers;
-    if (search) updated = updated.filter(f => f.farmerName.toLowerCase().includes(search.toLowerCase()));
-    if (category) updated = updated.filter(f => f.farmerCategory === category);
-    setFilteredFarmers(updated);
-    setPage(1);
-  }, [search, category, farmers]);
+  const allCategories = useMemo(() => {
+    const cats = new Set();
+    farmers.forEach(f => f.categories?.forEach(c => cats.add(c)));
+    return Array.from(cats);
+  }, [farmers]);
 
-  const debounce = (func, delay) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => func(...a), delay); }; };
-  const handleSearch = debounce((v) => setSearch(v), 300);
-  const categories = Array.from(new Set(farmers.map(f => f.farmerCategory)));
+  const filteredFarmers = useMemo(() => {
+    let result = [...farmers];
+    if (search) {
+      const term = search.toLowerCase();
+      result = result.filter(f =>
+        f.userName?.toLowerCase().includes(term) ||
+        f.farmerCity?.toLowerCase().includes(term) ||
+        f.farmerAddress?.toLowerCase().includes(term)
+      );
+    }
+    if (selectedCategory) {
+      result = result.filter(f => f.categories?.includes(selectedCategory));
+    }
+    result.sort((a, b) => {
+      if (sortBy === "distance") return (a.distance || 999) - (b.distance || 999);
+      if (sortBy === "items") return (b.itemCount || 0) - (a.itemCount || 0);
+      if (sortBy === "name") return (a.userName || "").localeCompare(b.userName || "");
+      return 0;
+    });
+    return result;
+  }, [farmers, search, selectedCategory, sortBy]);
+
   const totalPages = Math.ceil(filteredFarmers.length / ITEMS_PER_PAGE);
   const paginatedFarmers = filteredFarmers.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  useEffect(() => { setPage(1); }, [search, selectedCategory, sortBy]);
+
+  const stats = useMemo(() => ({
+    total: farmers.length,
+    totalItems: farmers.reduce((sum, f) => sum + (f.itemCount || 0), 0),
+    avgDistance: farmers.length ? (farmers.reduce((sum, f) => sum + (f.distance || 0), 0) / farmers.length).toFixed(1) : 0,
+  }), [farmers]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 rounded-full border-4 border-orange border-t-transparent animate-spin" />
+          <div className="w-12 h-12 rounded-full border-4 border-orange border-t-transparent animate-spin" />
           <p className="text-muted font-medium">Finding farmers near you...</p>
         </div>
       </div>
@@ -74,92 +122,395 @@ const NearbyFarmers = () => {
     <div className="min-h-screen flex flex-col bg-cream">
       <NavBar />
 
-      {/* Hero Banner */}
-      <div className="bg-cream-dark border-b border-cream-dark/50 py-16 text-center px-6">
-        <Sparkle size={20} className="text-orange mx-auto mb-4 animate-sparkle" />
-        <h1 className="font-serif text-5xl sm:text-6xl font-bold text-dark">
-          Nearby <span className="italic font-normal">Farmers</span>
-        </h1>
-        <p className="text-muted text-lg mt-4 max-w-xl mx-auto">
-          Discover local farmers within 30km bringing you the freshest produce.
-        </p>
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-br from-dark via-dark/95 to-dark/90 text-white overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-10 w-32 h-32 rounded-full bg-orange/5 blur-3xl" />
+          <div className="absolute bottom-10 right-20 w-48 h-48 rounded-full bg-orange/5 blur-3xl" />
+          <div className="absolute top-10 left-10 w-32 h-32 rounded-full border-2 border-orange/10" />
+          <div className="absolute bottom-10 right-20 w-48 h-48 rounded-full border border-orange/10" />
+        </div>
+
+        <div className="relative max-w-[1300px] mx-auto px-6 md:px-10 lg:px-16 py-16 md:py-20">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center"
+          >
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-orange/20 rounded-full text-orange text-sm font-semibold mb-6">
+              <FaSeedling size={14} /> Fresh & Local
+            </span>
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-bold mb-4">
+              Nearby <span className="italic font-normal text-orange">Farmers</span>
+            </h1>
+            <p className="text-white/70 text-lg max-w-xl mx-auto mb-8">
+              Discover local farmers within 30km bringing you the freshest farm-to-table produce.
+            </p>
+
+            <div className="flex items-center justify-center gap-8 sm:gap-12">
+              <div className="text-center">
+                <p className="text-3xl font-bold text-orange">{stats.total}</p>
+                <p className="text-xs text-white/60 mt-1">Farmers</p>
+              </div>
+              <div className="w-px h-10 bg-white/20" />
+              <div className="text-center">
+                <p className="text-3xl font-bold text-orange">{stats.totalItems}</p>
+                <p className="text-xs text-white/60 mt-1">Products</p>
+              </div>
+              <div className="w-px h-10 bg-white/20" />
+              <div className="text-center">
+                <p className="text-3xl font-bold text-orange">{stats.avgDistance}<span className="text-lg">km</span></p>
+                <p className="text-xs text-white/60 mt-1">Avg Distance</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
 
-      <main className="flex-grow max-w-[1300px] mx-auto px-6 md:px-10 lg:px-16 py-12 w-full">
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 max-w-2xl mb-12">
-          <div className="relative flex-1">
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-muted text-sm" />
+      <main className="flex-grow max-w-[1300px] mx-auto px-6 md:px-10 lg:px-16 py-8 w-full">
+        {/* Toolbar */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div className="relative w-full sm:w-80">
+            <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted text-xs" />
             <input
               type="text"
-              placeholder="Search farmers..."
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-cream-dark bg-white text-dark placeholder-muted focus:outline-none focus:border-orange transition-colors text-sm"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search farmers, city..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-cream-dark bg-white text-dark text-sm placeholder-muted focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/10 transition-all"
             />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-dark transition-colors">
+                <FaTimes size={12} />
+              </button>
+            )}
           </div>
-          <div className="relative flex-1">
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-cream-dark bg-white text-dark focus:outline-none focus:border-orange transition-colors text-sm appearance-none"
+
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-none">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="w-full sm:w-40 pl-3 pr-8 py-2.5 rounded-xl border border-cream-dark bg-white text-dark text-sm focus:outline-none focus:border-orange appearance-none cursor-pointer"
+              >
+                <option value="distance">Nearest First</option>
+                <option value="items">Most Products</option>
+                <option value="name">Name A-Z</option>
+              </select>
+              <FaSortAmountDown className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-xs pointer-events-none" />
+            </div>
+
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-colors ${showFilters ? "bg-orange text-white border-orange" : "border-cream-dark bg-white text-dark hover:border-orange"}`}
             >
-              <option value="">All Categories</option>
-              {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-            </select>
-            <FaChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-muted text-xs pointer-events-none" />
+              <FaFilter size={12} />
+              <span className="hidden sm:inline">Filters</span>
+            </button>
+
+            <div className="hidden md:flex items-center bg-white rounded-xl border border-cream-dark p-0.5">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`p-2 rounded-lg transition-colors ${viewMode === "grid" ? "bg-dark text-white" : "text-muted hover:text-dark"}`}
+              >
+                <BsGrid3X3Gap size={14} />
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`p-2 rounded-lg transition-colors ${viewMode === "list" ? "bg-dark text-white" : "text-muted hover:text-dark"}`}
+              >
+                <BsListUl size={14} />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Farmers Grid */}
-        {paginatedFarmers.length > 0 ? (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-5 sm:gap-6">
-              {paginatedFarmers.map((farmer, i) => (
-                <motion.div
-                  key={farmer.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: i * 0.05 }}
-                  onClick={() => navigate("/Profile", { state: { email: farmer.farmerEmail } })}
-                  className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-cream-dark/40 hover:border-orange/20 cursor-pointer overflow-hidden group"
+        {/* Category Pills */}
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden mb-6"
+            >
+              <div className="flex flex-wrap gap-2 pb-2">
+                <button
+                  onClick={() => setSelectedCategory("")}
+                  className={`px-4 py-2 rounded-full text-xs font-semibold transition-colors ${!selectedCategory ? "bg-orange text-white" : "bg-white border border-cream-dark text-muted hover:border-orange hover:text-orange"}`}
                 >
-                  <div className="relative flex justify-center pt-8 pb-4 bg-cream-dark/20">
-                    <img
-                      src={farmer.image || "https://www.strasys.uk/wp-content/uploads/2022/02/Depositphotos_484354208_S.jpg"}
-                      alt={farmer.farmerName}
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-4 border-white shadow-md"
-                    />
-                    <span className="absolute top-4 right-4 w-3 h-3 rounded-full bg-orange border-2 border-white" />
-                  </div>
-                  <div className="p-4 text-center">
-                    <h2 className="font-serif text-lg font-bold text-dark group-hover:text-orange transition-colors truncate">{farmer.farmerName}</h2>
-                    <p className="text-xs text-muted mt-1 flex items-center justify-center gap-1 truncate">
-                      <FaMapMarkerAlt className="text-orange shrink-0" /> {farmer.farmerAddress}
-                    </p>
-                    <span className="mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-cream-dark text-dark">{farmer.farmerCategory}</span>
-                    <button className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 bg-dark text-white rounded-xl hover:bg-orange transition-colors text-sm font-semibold">
-                      <FaShoppingBasket size={12} /> Shop Now
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                  All
+                </button>
+                {allCategories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(selectedCategory === cat ? "" : cat)}
+                    className={`px-4 py-2 rounded-full text-xs font-semibold transition-colors flex items-center gap-1.5 ${selectedCategory === cat ? "bg-orange text-white" : "bg-white border border-cream-dark text-muted hover:border-orange hover:text-orange"}`}
+                  >
+                    <span>{CATEGORY_ICONS[cat] || "🌱"}</span>
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Results count */}
+        <p className="text-xs text-muted mb-4">
+          {filteredFarmers.length} farmer{filteredFarmers.length !== 1 ? "s" : ""} found
+          {selectedCategory && ` in ${selectedCategory}`}
+          {totalPages > 1 && ` — Page ${page} of ${totalPages}`}
+        </p>
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-16">
+            <p className="text-red-500 font-semibold mb-2">{error}</p>
+            <button onClick={() => window.location.reload()} className="px-6 py-2 bg-orange text-white rounded-xl text-sm font-semibold hover:bg-orange-hover transition-colors">
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Farmers Grid/List */}
+        {!error && paginatedFarmers.length > 0 ? (
+          <>
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {paginatedFarmers.map((farmer, i) => (
+                  <FarmerCard key={farmer.email} farmer={farmer} index={i} navigate={navigate} coverImg={COVER_IMAGES[i % COVER_IMAGES.length]} />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {paginatedFarmers.map((farmer, i) => (
+                  <FarmerListItem key={farmer.email} farmer={farmer} index={i} navigate={navigate} />
+                ))}
+              </div>
+            )}
+
+            {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center mt-12">
-                <StyledPagination count={totalPages} page={page} onChange={(_, v) => { setPage(v); window.scrollTo({ top: 0, behavior: "smooth" }); }} siblingCount={0} boundaryCount={1} />
+              <div className="flex items-center justify-center gap-2 mt-10">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 rounded-xl border border-cream-dark bg-white text-sm font-medium text-dark hover:bg-orange hover:text-white hover:border-orange transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-9 h-9 rounded-xl text-sm font-semibold transition-colors ${page === p ? "bg-orange text-white shadow-sm" : "border border-cream-dark bg-white text-dark hover:bg-orange hover:text-white"}`}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 rounded-xl border border-cream-dark bg-white text-sm font-medium text-dark hover:bg-orange hover:text-white hover:border-orange transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
               </div>
             )}
           </>
-        ) : (
+        ) : !error && (
           <div className="text-center py-24">
-            <FaLeaf size={40} className="text-orange mx-auto mb-5 opacity-50" />
-            <p className="font-serif text-2xl font-bold text-dark mb-2">No Farmers Nearby Yet</p>
-            <p className="text-muted">Try adjusting your search or category filter.</p>
+            <FaLeaf size={48} className="text-orange/30 mx-auto mb-5" />
+            <p className="font-serif text-2xl font-bold text-dark mb-2">No Farmers Found</p>
+            <p className="text-muted mb-6">Try adjusting your search or filters.</p>
+            {(search || selectedCategory) && (
+              <button
+                onClick={() => { setSearch(""); setSelectedCategory(""); }}
+                className="px-6 py-2.5 bg-orange text-white rounded-xl text-sm font-semibold hover:bg-orange-hover transition-colors"
+              >
+                Clear Filters
+              </button>
+            )}
           </div>
         )}
       </main>
       <Footer />
     </div>
+  );
+};
+
+/* ─── Farmer Card (Grid View) ─── */
+const FarmerCard = ({ farmer, index, navigate, coverImg }) => {
+  const imgSrc = farmer.farmerProfilePhoto && farmer.farmerProfilePhoto !== "default_farmer_profile.jpg"
+    ? farmer.farmerProfilePhoto
+    : PLACEHOLDER_IMG;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.05 }}
+      className="bg-white rounded-2xl border border-cream-dark shadow-sm hover:shadow-xl hover:border-orange/20 hover:-translate-y-1 transition-all duration-300 overflow-hidden group"
+    >
+      {/* Cover Image */}
+      <div className="relative h-24 overflow-hidden">
+        <img
+          src={coverImg}
+          alt="farm cover"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-dark/40 to-transparent" />
+        {/* Distance badge */}
+        <span className="absolute top-3 right-3 px-2.5 py-1 bg-white/95 backdrop-blur-sm rounded-full text-[10px] font-bold text-orange shadow-sm flex items-center gap-1">
+          <FaMapMarkerAlt size={8} />
+          {farmer.distance}km
+        </span>
+      </div>
+
+      {/* Profile Image - overlaps cover */}
+      <div className="relative px-4 -mt-8">
+        <div className="relative w-16 h-16">
+          <img
+            src={imgSrc}
+            alt={farmer.userName}
+            className="w-16 h-16 rounded-xl object-cover border-4 border-white shadow-lg group-hover:scale-105 transition-transform duration-300"
+          />
+          {/* Verified badge */}
+          <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
+            <FaCheckCircle size={10} className="text-white" />
+          </span>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="p-4 pt-3">
+        <h3 className="font-serif text-lg font-bold text-dark group-hover:text-orange transition-colors truncate">
+          {farmer.userName}
+        </h3>
+
+        <div className="flex items-center gap-1.5 mt-1 text-xs text-muted">
+          <FaMapMarkerAlt className="text-orange shrink-0" size={10} />
+          <span className="truncate">{farmer.farmerCity}, {farmer.farmerCountry}</span>
+        </div>
+
+        <div className="flex items-center gap-1.5 mt-1 text-xs text-muted">
+          <FaShoppingBag className="text-orange shrink-0" size={10} />
+          <span>{farmer.itemCount} products available</span>
+        </div>
+
+        {/* Rating */}
+        <div className="flex items-center gap-1.5 mt-2">
+          <div className="flex items-center gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <FaStar key={i} size={10} className={i < 4 ? "text-[#E8C547]" : "text-cream-dark"} />
+            ))}
+          </div>
+          <span className="text-[10px] text-muted font-medium">4.0 (24 reviews)</span>
+        </div>
+
+        {/* Category tags */}
+        {farmer.categories?.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {farmer.categories.slice(0, 3).map(cat => (
+              <span key={cat} className="inline-flex items-center gap-1 px-2 py-0.5 bg-cream rounded-lg text-[10px] font-medium text-dark border border-cream-dark">
+                {CATEGORY_ICONS[cat]} {cat}
+              </span>
+            ))}
+            {farmer.categories.length > 3 && (
+              <span className="px-2 py-0.5 bg-cream rounded-lg text-[10px] font-medium text-muted border border-cream-dark">
+                +{farmer.categories.length - 3}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-2 mt-4">
+          <button
+            onClick={() => navigate("/market")}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-orange text-white rounded-xl text-xs font-semibold hover:bg-orange-hover transition-colors shadow-sm"
+          >
+            <FaStore size={10} /> Shop Now
+          </button>
+          <button
+            onClick={() => navigate("/Profile", { state: { email: farmer.email } })}
+            className="px-3 py-2.5 rounded-xl border border-cream-dark text-dark text-xs font-medium hover:bg-orange hover:text-white hover:border-orange transition-colors"
+          >
+            <FaArrowRight size={10} />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+/* ─── Farmer List Item (List View) ─── */
+const FarmerListItem = ({ farmer, index, navigate }) => {
+  const imgSrc = farmer.farmerProfilePhoto && farmer.farmerProfilePhoto !== "default_farmer_profile.jpg"
+    ? farmer.farmerProfilePhoto
+    : PLACEHOLDER_IMG;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.03 }}
+      className="bg-white rounded-2xl border border-cream-dark shadow-sm hover:shadow-lg hover:border-orange/20 transition-all duration-200 p-4 flex items-center gap-4 group"
+    >
+      <div className="relative shrink-0">
+        <img
+          src={imgSrc}
+          alt={farmer.userName}
+          className="w-16 h-16 rounded-xl object-cover border-2 border-cream-dark group-hover:border-orange/30 transition-colors"
+        />
+        <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
+          <FaCheckCircle size={9} className="text-white" />
+        </span>
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <h3 className="font-serif text-base font-bold text-dark group-hover:text-orange transition-colors truncate">{farmer.userName}</h3>
+          <span className="px-2 py-0.5 bg-orange/10 rounded-full text-[10px] font-bold text-orange shrink-0 flex items-center gap-1">
+            <FaMapMarkerAlt size={7} /> {farmer.distance}km
+          </span>
+        </div>
+        <div className="flex items-center gap-3 mt-1 text-xs text-muted">
+          <span className="flex items-center gap-1"><FaMapMarkerAlt className="text-orange" size={9} /> {farmer.farmerCity}</span>
+          <span className="flex items-center gap-1"><FaShoppingBag className="text-orange" size={9} /> {farmer.itemCount} items</span>
+        </div>
+        <div className="flex items-center gap-3 mt-1.5">
+          {farmer.categories?.length > 0 && (
+            <div className="flex gap-1">
+              {farmer.categories.slice(0, 4).map(cat => (
+                <span key={cat} className="text-[10px]">{CATEGORY_ICONS[cat]}</span>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <FaStar key={i} size={8} className={i < 4 ? "text-[#E8C547]" : "text-cream-dark"} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={() => navigate("/market")}
+        className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-orange text-white rounded-xl text-xs font-semibold hover:bg-orange-hover transition-colors shadow-sm shrink-0"
+      >
+        <FaStore size={10} /> Shop
+      </button>
+      <button
+        onClick={() => navigate("/Profile", { state: { email: farmer.email } })}
+        className="w-9 h-9 flex items-center justify-center rounded-xl border border-cream-dark text-muted hover:text-orange hover:border-orange transition-colors shrink-0"
+      >
+        <FaChevronRight size={12} />
+      </button>
+    </motion.div>
   );
 };
 

@@ -40,6 +40,17 @@ app.get('/',async(req,res) => {
   });
 })
 
+// Health check with DB status
+app.get('/health', async (req, res) => {
+  const mongoose = require("mongoose");
+  const dbState = mongoose.connection.readyState; // 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
+  res.status(200).json({
+    status: "ok",
+    db: dbState === 1 ? "connected" : "disconnected",
+    dbState,
+  });
+})
+
 // Routes
 app.use("/farmer", FarmerRoutes);
 app.use("/market", MarketRoutes);

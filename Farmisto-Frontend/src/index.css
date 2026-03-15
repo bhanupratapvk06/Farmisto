@@ -142,14 +142,3 @@ body::-webkit-scrollbar-thumb {
   animation-delay: 0.35s;
 }
 
-
-.btn:not([class*="btn-"]):hover,
-button:not(.btn):hover,
-a:not(.btn):hover,
-[role="button"]:hover,
-.btn:not([class*="btn-"]):active,
-button:not(.btn):active,
-a:not(.btn):active,
-[role="button"]:active {
-  background-color: inherit;
-}

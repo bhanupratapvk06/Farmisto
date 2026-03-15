@@ -108,11 +108,31 @@ const DeleteItem = asyncHandler(async (req, res) => {
 });
 
 const GetItems = asyncHandler(async (req, res) => {
-  const items = await Market.find({});
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+  const skip = (page - 1) * limit;
+
+  const [items, total] = await Promise.all([
+    Market.find({})
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    Market.countDocuments({}),
+  ]);
+
   if (!items.length) {
-    return res.status(200).json({ message: "No items available!", items: [] });
+    return res.status(200).json({ message: "No items available!", items: [], total: 0, page, pages: 0 });
   }
-  return res.status(200).json({ message: "Items fetched successfully!", items });
+
+  res.set("Cache-Control", "public, max-age=30");
+  return res.status(200).json({
+    message: "Items fetched successfully!",
+    items,
+    total,
+    page,
+    pages: Math.ceil(total / limit),
+  });
 });
 
 const GetItemsByFarmerEmail = asyncHandler(async (req, res) => {

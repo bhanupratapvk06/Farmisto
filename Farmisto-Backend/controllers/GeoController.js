@@ -1,8 +1,8 @@
 const { default: axios } = require("axios");
-const Farmer = require("../models/Farmer");
+const User = require("../models/User");
+const Market = require("../models/Market");
 
 // Reverse GeoCoding
-
 const fetchLocation = async (lat, lng) => {
   if (!lat || !lng) {
     console.log("Latitude and Longitude are required.");
@@ -41,11 +41,9 @@ const calculateDistance = (lat1, lng1, lat2, lng2) => {
 };
 
 // Nearby Farmers in a Radius of 30 Km
-
 const fetchNearbyFarmers = async (req, res) => {
-  console.log(req.user)
-  const lat = req.user.location.latitude;
-  const lng = req.user.location.longitude;
+  const lat = req.user.location?.latitude;
+  const lng = req.user.location?.longitude;
 
   if (!lat || !lng) {
     return res
@@ -53,19 +51,51 @@ const fetchNearbyFarmers = async (req, res) => {
       .json({ error: "Latitude and Longitude are required." });
   }
   try {
-    const farmers = await Farmer.find({});
+    const farmers = await User.find({ role: "farmer", userLocation: { $exists: true } }).lean();
     if (farmers.length === 0) {
       return res.status(404).json({ message: "No farmers found nearby" });
     }
+
+    // Get item counts and categories for each farmer
+    const farmerEmails = farmers.map(f => f.email);
+    const marketItems = await Market.find({ "seller.email": { $in: farmerEmails } }).lean();
+
+    const itemStats = {};
+    marketItems.forEach(item => {
+      const email = item.seller.email;
+      if (!itemStats[email]) {
+        itemStats[email] = { count: 0, categories: new Set() };
+      }
+      itemStats[email].count++;
+      itemStats[email].categories.add(item.itemCategory);
+    });
+
     const nearbyFarmers = farmers.filter((farmer) => {
+      if (!farmer.userLocation?.latitude || !farmer.userLocation?.longitude) return false;
       const distance = calculateDistance(
         lat,
         lng,
-        farmer.farmerLocation.latitude,
-        farmer.farmerLocation.longitude
+        farmer.userLocation.latitude,
+        farmer.userLocation.longitude
       );
       return distance <= 30;
-    });
+    }).map(f => {
+      const stats = itemStats[f.email] || { count: 0, categories: new Set() };
+      return {
+        userName: f.userName,
+        email: f.email,
+        farmerCity: f.farmerCity,
+        farmerAddress: f.farmerAddress,
+        farmerMobile: f.farmerMobile,
+        farmerCountry: f.farmerCountry,
+        farmerProfilePhoto: f.farmerProfilePhoto,
+        userLocation: f.userLocation,
+        itemCount: stats.count,
+        categories: Array.from(stats.categories),
+        distance: Math.round(calculateDistance(lat, lng, f.userLocation.latitude, f.userLocation.longitude) * 10) / 10,
+      };
+    }).sort((a, b) => a.distance - b.distance);
+
     res.status(200).json({ farmers: nearbyFarmers });
   } catch (error) {
     res.status(500).json({ error: "Server Error" });

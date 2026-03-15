@@ -8,6 +8,8 @@ import {
   AvocadoFeature,
   ProduceGrid,
   Testimonials,
+  HowItWorks,
+  Newsletter,
 } from "../../Components/HomeSections/HomeSections";
 
 const Home = () => {
@@ -18,8 +20,10 @@ const Home = () => {
       <MarqueeStrip />
       <ProduceShowcase />
       <AvocadoFeature />
+      <HowItWorks />
       <ProduceGrid />
       <Testimonials />
+      <Newsletter />
       <Footer />
     </div>
   );

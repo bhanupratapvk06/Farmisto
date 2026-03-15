@@ -6,6 +6,7 @@ const marketSchema = new mongoose.Schema(
     itemName: {
       type: String,
       required: true,
+      index: true,
     },
     itemPrice: {
       type: Number,
@@ -18,6 +19,7 @@ const marketSchema = new mongoose.Schema(
     itemCategory: {
       type: String,
       required: true,
+      index: true,
     },
     quantity:{
       type: Number,
@@ -37,7 +39,8 @@ const marketSchema = new mongoose.Schema(
     itemType:{
       type: String,
       required: true,
-      default:"All"
+      default:"All",
+      index: true,
     },
     seller: {
       id:{
@@ -52,6 +55,7 @@ const marketSchema = new mongoose.Schema(
       email:{
         type: String,
         required: true,
+        index: true,
       }
     },
   },

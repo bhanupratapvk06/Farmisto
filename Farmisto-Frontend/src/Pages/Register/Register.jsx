@@ -15,11 +15,6 @@ const ROLES = {
     label: "Consumer",
     icon: FaUser,
     tagline: "Shop fresh produce from local farmers.",
-    apiBase: "/user",
-    nameField: "userName",
-    emailField: "email",
-    passwordField: "password",
-    locationField: "userLocation",
     redirect: "/",
     image: "https://plus.unsplash.com/premium_photo-1661964436517-d977254ad1fe?q=80&w=1400&auto=format&fit=crop",
     quote: "Fresh produce,\ndelivered to your door.",
@@ -29,11 +24,6 @@ const ROLES = {
     label: "Farmer",
     icon: FaTractor,
     tagline: "Sell your harvest directly to consumers.",
-    apiBase: "/farmer",
-    nameField: "farmerName",
-    emailField: "farmerEmail",
-    passwordField: "farmerPassword",
-    locationField: "farmerLocation",
     redirect: "/farmer/dashboard",
     image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=1400&auto=format&fit=crop",
     quote: "Grow more,\nearns more.",
@@ -92,18 +82,22 @@ const Register = () => {
 
   const cfg = ROLES[role];
 
-  /* Location fetch — only needed for consumer registration */
+  /* Location fetch — only needed for registration (both roles) */
   const fetchLocation = () => {
-    if (isLogin || role !== "consumer") return;
+    if (isLogin) return;
     setShowModal(true);
+    setLocationError("");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        locationRef.current = { latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy };
+        locationRef.current = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
         setLocationError("");
+        setShowModal(false);
       },
-      () => setLocationError("Unable to get location. Please enter manually.")
+      () => {
+        setLocationError("Unable to get location. Please enter manually.");
+      },
+      { timeout: 5000, enableHighAccuracy: false }
     );
-    setTimeout(() => { setShowModal(false); }, 3000);
   };
 
   // Reset form state when role changes
@@ -116,7 +110,7 @@ const Register = () => {
     if (passwordRef.current) passwordRef.current.value = "";
   }, [role]);
 
-  // Fetch location when switching to consumer register
+  // Fetch location when switching to register mode
   useEffect(() => { fetchLocation(); }, [isLogin, role]);
 
   const handleSubmit = async (e) => {
@@ -127,23 +121,39 @@ const Register = () => {
     }
     setLoading(true);
 
-    const formData = {
-      [cfg.nameField]: nameRef.current?.value || "",
-      [cfg.emailField]: emailRef.current.value,
-      [cfg.passwordField]: passwordRef.current.value,
-      ...(role === "consumer" && !isLogin ? { [cfg.locationField]: locationRef.current } : {}),
-      ...(role === "farmer" && !isLogin ? { [cfg.locationField]: locationRef.current } : {}),
-    };
+    // Unified request body for both roles
+    const formData = isLogin
+      ? { email: emailRef.current.value, password: passwordRef.current.value }
+      : {
+          userName: nameRef.current?.value || "",
+          email: emailRef.current.value,
+          password: passwordRef.current.value,
+          role: role,
+          userLocation: locationRef.current,
+        };
 
     try {
-      const response = await axios.post(`${cfg.apiBase}/${isLogin ? "login" : "register"}`, formData);
-      if (response.status === 200) {
+      const endpoint = isLogin ? "/user/login" : "/user/register";
+      const response = await axios.post(endpoint, formData);
+      if (response.status === 200 || response.status === 201) {
         login(response.data.token);
-        navigate(cfg.redirect);
+        // Use redirect from response, or fall back to role config
+        navigate(response.data.redirect || cfg.redirect);
       }
     } catch (err) {
-      setError(err.response?.data?.message || `${isLogin ? "Login" : "Registration"} failed. Please try again.`);
-      console.error(err);
+      console.error("Full error:", {
+        message: err.message,
+        code: err.code,
+        status: err.response?.status,
+        data: err.response?.data,
+      });
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError("Server is waking up. Please wait a moment and try again.");
+      } else {
+        const serverMsg = err.response?.data?.message;
+        const serverError = err.response?.data?.error;
+        setError(serverMsg || serverError || `${isLogin ? "Login" : "Registration"} failed. Please try again.`);
+      }
     } finally {
       setLoading(false);
     }
@@ -158,11 +168,11 @@ const Register = () => {
         </div>
       )}
 
-      {/* Location modal (consumer register only) */}
+      {/* Location modal (register only) */}
       <LocationModal
         open={showModal}
         error={locationError}
-        onManual={() => { locationRef.current = { latitude: "Manual", longitude: "Manual" }; setLocationError(""); }}
+        onManual={() => { locationRef.current = { latitude: "Manual", longitude: "Manual" }; setLocationError(""); setShowModal(false); }}
         onClose={() => setShowModal(false)}
       />
 
@@ -216,8 +226,8 @@ const Register = () => {
                 : "bg-dark/5 border-dark/10 text-dark"
             }`}>
               {role === "farmer"
-                ? "🚜 You'll get access to the Farmer Dashboard — manage orders, listings & earnings."
-                : "🛒 You'll be able to browse the market, place orders & track deliveries."}
+                ? "You'll get access to the Farmer Dashboard — manage orders, listings & earnings."
+                : "You'll be able to browse the market, place orders & track deliveries."}
             </div>
           )}
           {isLogin && <div className="mb-8" />}

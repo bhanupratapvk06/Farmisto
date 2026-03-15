@@ -1,89 +1,95 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { RiLeafFill } from "react-icons/ri";
-import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
+import { FaLeaf, FaFacebookF, FaInstagram, FaTwitter, FaLinkedinIn, FaHeart } from "react-icons/fa";
 
 const Footer = () => {
-  const footerLinks = {
-    "How It Works": [
-      { name: "Home", path: "/" },
-      { name: "About", path: "/about" },
-      { name: "Read", path: "/faq" },
+  const footerSections = {
+    "Shop": [
+      { name: "Market Place", path: "/market" },
+      { name: "Nearby Farmers", path: "/farmers" },
+      { name: "Organic Produce", path: "/market" },
     ],
-    "Produce": [
-      { name: "Vegetables", path: "/market" },
-      { name: "Fruits", path: "/market" },
-      { name: "Herbs", path: "/market" },
+    "Company": [
+      { name: "About Us", path: "/about" },
+      { name: "How It Works", path: "/about" },
+      { name: "Our Farmers", path: "/farmers" },
     ],
-    "Join Our Newsletter": null,
+    "Support": [
+      { name: "Help Center", path: "/faq" },
+      { name: "Contact Us", path: "/contact" },
+      { name: "FAQs", path: "/faq" },
+    ],
   };
 
   return (
-    <footer className="bg-cream border-t border-cream-dark pt-16 pb-8">
-      <div className="max-w-[1300px] mx-auto px-6 md:px-10 lg:px-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          {/* Brand */}
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2">
-              <RiLeafFill size={22} className="text-orange" />
-              <span className="font-serif text-2xl font-bold text-dark tracking-tight">
-                farm<span className="italic">isto</span>
+    <footer className="bg-dark text-white">
+      <div className="max-w-[1300px] mx-auto px-6 md:px-10 lg:px-16 py-10 lg:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-8">
+          {/* Brand Column */}
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            <Link to="/" className="flex items-center gap-2.5 group w-fit">
+              <div className="w-8 h-8 rounded-lg bg-orange flex items-center justify-center shadow-lg group-hover:shadow-orange/30 transition-all">
+                <FaLeaf size={15} className="text-white" />
+              </div>
+              <span className="font-serif text-xl font-bold tracking-tight">
+                farm<span className="italic text-orange">isto</span>
               </span>
-            </div>
-            <p className="text-muted text-sm leading-relaxed max-w-xs">
-              Delivering the freshest farm produce directly from local farmers to your table. Sustainable. Fresh. Local.
+            </Link>
+            <p className="text-white/50 text-sm leading-relaxed max-w-xs">
+              Fresh farm produce delivered directly from local farmers to your doorstep. Sustainable. Fresh. Local.
             </p>
-            <div className="flex items-center gap-3 mt-2">
-              {[FaFacebookF, FaInstagram, FaTwitter].map((Icon, i) => (
-                <a key={i} href="#" className="w-9 h-9 rounded-full bg-cream-dark flex items-center justify-center text-dark hover:bg-orange hover:text-white transition-all duration-300">
-                  <Icon size={14} />
+
+            {/* Social Icons */}
+            <div className="flex items-center gap-2 mt-1">
+              {[FaFacebookF, FaInstagram, FaTwitter, FaLinkedinIn].map((Icon, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:bg-orange hover:border-orange hover:text-white transition-all duration-300"
+                >
+                  <Icon size={13} />
                 </a>
               ))}
             </div>
           </div>
 
-          {/* How It Works */}
-          <div>
-            <h4 className="font-semibold text-dark text-sm uppercase tracking-wider mb-5">How It Works</h4>
-            <ul className="flex flex-col gap-3">
-              {footerLinks["How It Works"].map((l, i) => (
-                <li key={i}><Link to={l.path} className="text-muted text-sm hover:text-dark transition-colors">{l.name}</Link></li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Produce */}
-          <div>
-            <h4 className="font-semibold text-dark text-sm uppercase tracking-wider mb-5">Produce</h4>
-            <ul className="flex flex-col gap-3">
-              {footerLinks["Produce"].map((l, i) => (
-                <li key={i}><Link to={l.path} className="text-muted text-sm hover:text-dark transition-colors">{l.name}</Link></li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Newsletter */}
-          <div>
-            <h4 className="font-semibold text-dark text-sm uppercase tracking-wider mb-5">Join Our Newsletter</h4>
-            <div className="flex flex-col gap-3">
-              <input
-                type="email"
-                placeholder="Email address"
-                className="w-full px-4 py-3 rounded-xl border border-cream-dark bg-cream focus:outline-none focus:border-orange transition-colors text-sm text-dark placeholder-muted"
-              />
-              <button className="w-10 h-10 rounded-full bg-orange flex items-center justify-center text-white hover:bg-orange-hover transition-colors self-end shadow-md">
-                →
-              </button>
+          {/* Link Columns */}
+          {Object.entries(footerSections).map(([title, links]) => (
+            <div key={title}>
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-orange mb-4">{title}</h4>
+              <ul className="space-y-2">
+                {links.map((link, i) => (
+                  <li key={i}>
+                    <Link
+                      to={link.path}
+                      className="text-sm text-white/50 hover:text-white transition-colors duration-200"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          ))}
         </div>
+      </div>
 
-        {/* Bottom bar */}
-        <div className="border-t border-cream-dark pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-muted text-xs">© {new Date().getFullYear()} Farmisto Trading Corp.</p>
-          <div className="flex gap-6">
-            <Link to="/terms-conditions" className="text-xs text-muted hover:text-dark transition-colors">Terms</Link>
-            <Link to="/" className="text-xs text-muted hover:text-dark transition-colors">Privacy</Link>
+      {/* Bottom Bar */}
+      <div className="border-t border-white/10">
+        <div className="max-w-[1300px] mx-auto px-6 md:px-10 lg:px-16 py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 text-white/40 text-xs">
+              <span>&copy; {new Date().getFullYear()} Farmisto Trading Corp.</span>
+              <span className="hidden sm:inline">|</span>
+              <span className="hidden sm:inline flex items-center gap-1">
+                Made with <FaHeart size={9} className="text-orange" /> for local farmers
+              </span>
+            </div>
+            <div className="flex items-center gap-5">
+              <Link to="/terms-conditions" className="text-xs text-white/40 hover:text-white transition-colors">Terms</Link>
+              <Link to="/about" className="text-xs text-white/40 hover:text-white transition-colors">Privacy</Link>
+              <Link to="/contact" className="text-xs text-white/40 hover:text-white transition-colors">Cookies</Link>
+            </div>
           </div>
         </div>
       </div>

@@ -7,9 +7,10 @@ const GenerateToken = (person) => {
   const token = JWT.sign(
     {
       id: person._id,
-      email: person.farmerEmail || person.email,
-      name: person.userName || person.farmerName,
-      location: person.userLocation || person.farmerLocation,
+      email: person.email,
+      name: person.userName,
+      role: person.role || "consumer",
+      location: person.userLocation,
     },
     process.env.JWT_SECRET,
     { expiresIn: "3d" }

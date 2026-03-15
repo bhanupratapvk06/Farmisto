@@ -12,8 +12,7 @@ const FarmerSchema = new mongoose.Schema({
   farmerMobile: {
     type: Number,
     unique: true,
-    minlength: 10,
-    maxlength: 10,
+    sparse: true,
   },
   farmerEmail: {
     type: String,

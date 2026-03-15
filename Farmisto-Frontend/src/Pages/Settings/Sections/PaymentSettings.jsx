@@ -12,7 +12,7 @@ const EditField = ({ label, icon: Icon, name, value, onChange, enabled, onToggle
       <Icon size={12} className="text-orange" /> {label}
     </label>
     <div className="flex items-center gap-2">
-      <input type={type} name={name} value={value} onChange={onChange} disabled={!enabled} placeholder={placeholder}
+      <input type={type} name={name} value={value || ""} onChange={onChange} disabled={!enabled} placeholder={placeholder}
         className={`${inputBase} ${enabled ? inputEnabled : inputDisabled}`} />
       <button type="button" onClick={onToggle}
         className={`w-9 h-9 flex items-center justify-center rounded-xl border shrink-0 transition-colors ${enabled ? "bg-orange border-orange text-white" : "bg-white border-cream-dark text-muted hover:border-orange hover:text-orange"}`}>
@@ -38,16 +38,32 @@ const Section = ({ title, icon: Icon, isOpen, onToggle, children }) => (
 );
 
 const PaymentSettings = () => {
-  const [formData, setFormData] = useState({ accountHolderName: "", accountNumber: "", bankName: "", ifscCode: "", upiId: "", paymentGateway: "" });
-  const [editFields, setEditFields] = useState({ accountHolderName: false, accountNumber: false, bankName: false, ifscCode: false, upiId: false, paymentGateway: false });
+  const [formData, setFormData] = useState({
+    accountHolderName: "", accountNumber: "", bankName: "",
+    ifscCode: "", upiId: "", paymentGateway: ""
+  });
+  const [editFields, setEditFields] = useState({
+    accountHolderName: false, accountNumber: false, bankName: false,
+    ifscCode: false, upiId: false, paymentGateway: false
+  });
   const [sections, setSections] = useState({ bankDetails: true, upiIntegration: false, paymentGatewaySettings: false });
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const authHeaders = { headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` } };
 
   const fetchDefaultData = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get("/farmer/settings/payment-data", { headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` } });
+      const response = await axios.get("/farmer/settings/payment-data", authHeaders);
       setFormData(response.data.payment || {});
-    } catch (error) { console.error("Error fetching payment data:", error); }
+    } catch (err) {
+      console.error("Error fetching payment data:", err);
+      setError("Failed to load payment settings");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchDefaultData(); }, []);
@@ -58,19 +74,34 @@ const PaymentSettings = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     const fieldsToUpdate = Object.keys(formData).filter(f => editFields[f]);
-    if (fieldsToUpdate.length === 0) { alert("No fields selected for update."); return; }
-    // Build plain JSON object (backend reads req.body directly, not FormData)
+    if (fieldsToUpdate.length === 0) { setError("No fields selected for update. Click the edit icon to enable a field."); return; }
+
     const payload = {};
     fieldsToUpdate.forEach(f => { payload[f] = formData[f]; });
+
     try {
-      const response = await axios.patch("/farmer/settings/update-payment", payload, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
-      });
-      if (response.status === 200) { setSuccess(true); setTimeout(() => setSuccess(false), 3000); await fetchDefaultData(); }
-    } catch (error) { console.error("Error updating payment settings:", error); }
+      const response = await axios.patch("/farmer/settings/update-payment", payload, authHeaders);
+      if (response.status === 200) {
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+        await fetchDefaultData();
+      }
+    } catch (err) {
+      console.error("Error updating payment settings:", err);
+      setError(err.response?.data?.message || "Failed to update payment settings");
+    }
     setEditFields({ accountHolderName: false, accountNumber: false, bankName: false, ifscCode: false, upiId: false, paymentGateway: false });
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-2xl flex items-center justify-center py-20">
+        <div className="w-10 h-10 border-4 border-orange border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl">
@@ -81,6 +112,12 @@ const PaymentSettings = () => {
         </div>
         {success && <span className="px-4 py-2 bg-green-100 text-green-700 text-sm font-semibold rounded-xl">✓ Saved!</span>}
       </div>
+
+      {error && (
+        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Section title="Bank Details" icon={FaBuilding} isOpen={sections.bankDetails} onToggle={() => toggleSection("bankDetails")}>

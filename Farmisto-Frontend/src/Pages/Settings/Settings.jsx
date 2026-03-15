@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import SideNav from "../../Dash/SideNav";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { FaUser, FaCreditCard, FaQuestionCircle, FaBalanceScale } from "react-icons/fa";
 
 const settingsData = [
@@ -11,6 +11,16 @@ const settingsData = [
 ];
 
 const Settings = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redirect to profile if on /farmer/settings directly
+  useEffect(() => {
+    if (location.pathname === "/farmer/settings" || location.pathname === "/farmer/settings/") {
+      navigate("profile", { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
   return (
     <div className="flex h-screen bg-cream overflow-hidden">
       <SideNav />
@@ -56,7 +66,6 @@ const Settings = () => {
           {/* Outlet: content for each settings sub-route */}
           <div className="flex-1 overflow-y-auto px-5 lg:px-8 py-8 scrollbar-none">
             <Outlet />
-            {/* Default placeholder shown if no subroute is active */}
           </div>
         </div>
       </div>

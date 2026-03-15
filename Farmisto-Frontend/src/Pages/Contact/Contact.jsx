@@ -1,6 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import NavBar from "../../Components/NavBar/NavBar";
 import Footer from "../../Components/Footer/Footer";
+import {
+  FaSeedling, FaMapMarkerAlt, FaEnvelope, FaPhone, FaClock,
+  FaPaperPlane, FaQuestionCircle, FaArrowRight, FaLeaf, FaHeadset
+} from "react-icons/fa";
 
 const Sparkle = ({ size = 18, className = "" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -8,80 +14,303 @@ const Sparkle = ({ size = 18, className = "" }) => (
   </svg>
 );
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+
+const stagger = {
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+
 const ContactUs = () => {
-  const details = [
-    { label: "Address", value: "123 Green Street, Farmer's City, AG 45678" },
-    { label: "Email", value: "support@farmisto.com" },
-    { label: "Phone", value: "+1 (123) 456-7890" },
-    { label: "Hours", value: "Mon–Fri, 9:00 AM – 5:00 PM" },
+  const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSubmitted(true);
+    setTimeout(() => {
+      setSubmitted(false);
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    }, 3000);
+  };
+
+  const contactDetails = [
+    { icon: <FaMapMarkerAlt size={18} />, label: "Address", value: "123 Green Street, Farmer's City, AG 45678", color: "#6CC24A" },
+    { icon: <FaEnvelope size={18} />, label: "Email", value: "support@farmisto.com", color: "#5B8EE6" },
+    { icon: <FaPhone size={18} />, label: "Phone", value: "+1 (123) 456-7890", color: "#E8C547" },
+    { icon: <FaClock size={18} />, label: "Hours", value: "Mon – Fri, 9:00 AM – 5:00 PM", color: "#E8621A" },
+  ];
+
+  const supportOptions = [
+    { icon: <FaQuestionCircle size={24} />, title: "FAQs", desc: "Browse common questions and instant answers.", link: "/faq", color: "#5B8EE6" },
+    { icon: <FaHeadset size={24} />, title: "Live Chat", desc: "Chat with our support team in real-time.", link: "#", color: "#6CC24A" },
+    { icon: <FaLeaf size={24} />, title: "Farmer Support", desc: "Dedicated help for our farming partners.", link: "/about", color: "#E8C547" },
   ];
 
   return (
     <div className="min-h-screen bg-cream">
       <NavBar />
 
-      {/* Hero */}
-      <div className="bg-cream-dark border-b border-cream-dark/50 py-16 text-center px-6">
-        <Sparkle size={20} className="text-orange mx-auto mb-4 animate-sparkle" />
-        <h1 className="font-serif text-5xl sm:text-6xl font-bold text-dark">
-          Contact <span className="italic font-normal">Us</span>
-        </h1>
-        <p className="text-muted text-lg mt-4 max-w-xl mx-auto">Get in touch with us for any inquiries or support.</p>
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-br from-dark via-dark/95 to-dark/90 overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-orange/5 blur-3xl" />
+          <div className="absolute bottom-10 right-20 w-96 h-96 rounded-full bg-orange/5 blur-3xl" />
+          <div className="absolute top-1/3 right-1/3 w-16 h-16 rounded-full border border-orange/10" />
+        </div>
+
+        <div className="relative max-w-[1300px] mx-auto px-6 md:px-10 lg:px-16 py-16 md:py-20 lg:py-28">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
+          >
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-orange/20 rounded-full text-orange text-sm font-semibold mb-6">
+              <FaHeadset size={14} /> Get in Touch
+            </span>
+            <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-5">
+              Contact <span className="italic font-normal text-orange">Us</span>
+            </h1>
+            <p className="text-white/60 text-lg max-w-xl mx-auto">
+              Have a question, feedback, or need help? We'd love to hear from you. Our team typically responds within 2 hours.
+            </p>
+          </motion.div>
+        </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-6 md:px-10 lg:px-16 py-20 grid grid-cols-1 lg:grid-cols-2 gap-16">
-        {/* Contact Form */}
-        <div>
-          <h2 className="font-serif text-3xl sm:text-4xl font-bold text-dark mb-8">We'd love to hear from you!</h2>
-          <form className="space-y-5">
-            {["Full Name", "Email Address", "Subject"].map((label, i) => (
-              <div key={i}>
-                <label className="block text-sm font-semibold text-dark mb-2">{label}</label>
-                <input
-                  type={label === "Email Address" ? "email" : "text"}
-                  className="w-full px-5 py-3.5 rounded-xl border border-cream-dark bg-white focus:outline-none focus:border-orange text-dark placeholder-muted transition-colors"
-                  placeholder={`Enter your ${label.toLowerCase()}`}
-                />
-              </div>
-            ))}
-            <div>
-              <label className="block text-sm font-semibold text-dark mb-2">Message</label>
-              <textarea
-                rows="5"
-                className="w-full px-5 py-3.5 rounded-xl border border-cream-dark bg-white focus:outline-none focus:border-orange text-dark placeholder-muted transition-colors resize-none"
-                placeholder="Write your message..."
-              />
+      {/* Main Content */}
+      <div className="max-w-[1300px] mx-auto px-6 md:px-10 lg:px-16 py-12 lg:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
+
+          {/* Contact Form - 3 cols */}
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="lg:col-span-3"
+          >
+            <div className="bg-white rounded-[2rem] border border-cream-dark shadow-sm p-6 sm:p-8 lg:p-10">
+              <span className="inline-flex items-center gap-2 px-3 py-1 bg-orange/10 rounded-full text-orange text-xs font-semibold mb-4">
+                <FaPaperPlane size={10} /> Send a Message
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-dark mb-2">We'd love to hear from you!</h2>
+              <p className="text-muted text-sm mb-8">Fill out the form and we'll get back to you as soon as possible.</p>
+
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-dark mb-2">Full Name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-5 py-3.5 rounded-xl border border-cream-dark bg-cream focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/10 text-dark placeholder-muted text-sm transition-all"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-dark mb-2">Email Address</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-5 py-3.5 rounded-xl border border-cream-dark bg-cream focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/10 text-dark placeholder-muted text-sm transition-all"
+                      placeholder="john@example.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-dark mb-2">Subject</label>
+                  <input
+                    type="text"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-5 py-3.5 rounded-xl border border-cream-dark bg-cream focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/10 text-dark placeholder-muted text-sm transition-all"
+                    placeholder="What's this about?"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-dark mb-2">Message</label>
+                  <textarea
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    required
+                    rows="5"
+                    className="w-full px-5 py-3.5 rounded-xl border border-cream-dark bg-cream focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/10 text-dark placeholder-muted text-sm transition-all resize-none"
+                    placeholder="Write your message here..."
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitted}
+                  className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-semibold text-base transition-all shadow-md ${
+                    submitted
+                      ? "bg-green-500 text-white"
+                      : "bg-orange text-white hover:bg-orange-hover hover:shadow-orange/30 hover:shadow-lg hover:-translate-y-0.5"
+                  }`}
+                >
+                  {submitted ? (
+                    <>Message Sent!</>
+                  ) : (
+                    <><FaPaperPlane size={14} /> Send Message</>
+                  )}
+                </button>
+              </form>
             </div>
-            <button
-              type="submit"
-              className="w-full py-4 bg-orange text-white font-semibold rounded-xl hover:bg-orange-hover transition-colors text-base shadow-md"
+          </motion.div>
+
+          {/* Contact Details - 2 cols */}
+          <div className="lg:col-span-2 flex flex-col gap-6">
+            {/* Info Cards */}
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="space-y-4"
             >
-              Send Message
-            </button>
-          </form>
-        </div>
-
-        {/* Contact Details */}
-        <div className="flex flex-col gap-6">
-          <div className="bg-dark rounded-3xl p-10 text-white">
-            <Sparkle size={20} className="text-orange mb-6 animate-sparkle" />
-            <h3 className="font-serif text-3xl font-bold mb-8">Our Contact Details</h3>
-            <ul className="space-y-6">
-              {details.map((d, i) => (
-                <li key={i} className="flex flex-col gap-1 border-b border-white/10 pb-5 last:border-0 last:pb-0">
-                  <span className="text-xs font-bold uppercase tracking-widest text-orange">{d.label}</span>
-                  <span className="text-white/80 text-base">{d.value}</span>
-                </li>
+              {contactDetails.map((detail, i) => (
+                <motion.div
+                  key={i}
+                  variants={fadeUp}
+                  className="bg-white rounded-2xl border border-cream-dark p-5 hover:shadow-md hover:border-orange/20 transition-all duration-300 flex items-center gap-4 group"
+                >
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center text-white shrink-0" style={{ backgroundColor: detail.color }}>
+                    {detail.icon}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted">{detail.label}</p>
+                    <p className="text-sm font-semibold text-dark group-hover:text-orange transition-colors">{detail.value}</p>
+                  </div>
+                </motion.div>
               ))}
-            </ul>
-          </div>
+            </motion.div>
 
-          {/* Map placeholder */}
-          <div className="rounded-3xl overflow-hidden h-48 bg-cream-dark flex items-center justify-center text-muted text-sm font-medium border border-cream-dark">
-            📍 Map Embed Here
+            {/* Map Card */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="bg-white rounded-2xl border border-cream-dark overflow-hidden shadow-sm flex-1"
+            >
+              <div className="h-48 sm:h-56 bg-gradient-to-br from-cream via-cream-dark/20 to-cream flex items-center justify-center relative">
+                {/* Decorative map illustration */}
+                <div className="absolute inset-0">
+                  <div className="absolute top-6 left-8 w-16 h-16 rounded-full bg-orange/5" />
+                  <div className="absolute bottom-8 right-10 w-24 h-24 rounded-full bg-orange/5" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border-2 border-dashed border-orange/20" />
+                </div>
+                <div className="relative text-center">
+                  <div className="w-14 h-14 rounded-full bg-orange flex items-center justify-center mx-auto mb-3 shadow-lg">
+                    <FaMapMarkerAlt size={22} className="text-white" />
+                  </div>
+                  <p className="text-sm font-bold text-dark">Farmisto HQ</p>
+                  <p className="text-xs text-muted mt-1">123 Green Street, Farmer's City</p>
+                </div>
+              </div>
+              <div className="p-4 border-t border-cream-dark">
+                <p className="text-xs text-muted text-center">Interactive map integration coming soon</p>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
+
+      {/* Support Options */}
+      <section className="bg-white border-y border-cream-dark">
+        <div className="max-w-[1300px] mx-auto px-6 md:px-10 lg:px-16 py-16">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="text-center mb-10"
+          >
+            <span className="inline-flex items-center gap-2 px-3 py-1 bg-orange/10 rounded-full text-orange text-xs font-semibold mb-4">
+              <FaHeadset size={10} /> Other Ways
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-dark">More Ways to Get Help</h2>
+          </motion.div>
+
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-5"
+          >
+            {supportOptions.map((option, i) => (
+              <motion.div key={i} variants={fadeUp}>
+                <Link to={option.link} className="block bg-cream rounded-2xl p-6 border border-cream-dark hover:shadow-lg hover:border-orange/20 transition-all duration-300 group h-full">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white mb-4" style={{ backgroundColor: option.color }}>
+                    {option.icon}
+                  </div>
+                  <h3 className="font-serif text-lg font-bold text-dark mb-2 group-hover:text-orange transition-colors">{option.title}</h3>
+                  <p className="text-muted text-sm leading-relaxed">{option.desc}</p>
+                  <span className="inline-flex items-center gap-1.5 text-orange text-xs font-semibold mt-3 group-hover:gap-2.5 transition-all">
+                    Learn more <FaArrowRight size={10} />
+                  </span>
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* CTA Banner */}
+      <section className="bg-cream py-8 lg:py-12">
+        <div className="max-w-[1300px] mx-auto px-6 md:px-10 lg:px-16">
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="relative bg-gradient-to-r from-dark to-dark/90 rounded-[2rem] overflow-hidden p-8 sm:p-12 text-center"
+          >
+            <div className="absolute inset-0">
+              <div className="absolute top-8 left-8 w-24 h-24 rounded-full border border-orange/10" />
+              <div className="absolute bottom-8 right-12 w-36 h-36 rounded-full border border-orange/10" />
+            </div>
+            <div className="relative z-10">
+              <Sparkle size={24} className="text-orange mx-auto mb-4 animate-sparkle" />
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white mb-4">
+                Join the <span className="italic text-orange">Farmisto</span> Family
+              </h2>
+              <p className="text-white/60 text-base max-w-md mx-auto mb-8">
+                Whether you're a farmer looking to sell or a consumer seeking fresh produce — we're here for you.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <Link to="/market" className="inline-flex items-center gap-2 bg-orange text-white font-semibold px-8 py-3.5 rounded-full text-base hover:bg-orange-hover transition-all duration-300 shadow-lg hover:shadow-orange/30 hover:shadow-xl hover:-translate-y-0.5">
+                  Shop Now <FaArrowRight size={14} />
+                </Link>
+                <Link to="/faq" className="inline-flex items-center gap-2 bg-white/10 text-white font-semibold px-8 py-3.5 rounded-full text-base border border-white/20 hover:bg-white/20 transition-all duration-300">
+                  <FaQuestionCircle size={14} /> View FAQs
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       <Footer />
     </div>
   );

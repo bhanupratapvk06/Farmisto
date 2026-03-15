@@ -1,54 +1,89 @@
 const User = require("../models/User");
 const { GenerateToken } = require("../middleware/TokenAuth");
 const Cart = require("../models/Cart");
-const Farmer = require("../models/Farmer");
 const Market = require("../models/Market");
 const { hashPassword, comparePassword } = require("../middleware/hashing");
 const asyncHandler = require("../middleware/asyncHandler");
+const { fetchLocation } = require("./GeoController");
 
 const UserRegister = asyncHandler(async (req, res) => {
-  const { userName, email, password, userLocation } = req.body;
+  const { userName, email, password, role, userLocation } = req.body;
 
-  if (!email || !password) {
+  if (!userName || !email || !password) {
     return res.status(400).json({ message: "Please enter all fields" });
   }
 
-  const isUserAlreadyRegistered = await User.findOne({ email });
+  const isUserAlreadyRegistered = await User.findOne({ email }).lean();
   if (isUserAlreadyRegistered) {
     return res.status(400).json({ message: "User already exists" });
   }
 
   const HashPassword = await hashPassword(password);
+
   const user = await User.create({
     userName,
     email,
     password: HashPassword,
-    userLocation,
+    role: role || "consumer",
+    userLocation: userLocation && userLocation.latitude ? userLocation : undefined,
   });
 
+  // For farmers, fetch location asynchronously to get address details
+  if (role === "farmer" && userLocation?.latitude && userLocation?.longitude) {
+    fetchLocation(userLocation.latitude, userLocation.longitude)
+      .then((GeoLocate) => {
+        if (GeoLocate && GeoLocate.length > 0) {
+          const addressArray = GeoLocate[0].formatted_address
+            .split(",")
+            .map((item) => item.trim());
+          const len = addressArray.length;
+          User.findByIdAndUpdate(user._id, {
+            farmerCity: addressArray[len - 3],
+            farmerStateZip: addressArray[len - 2],
+            farmerAddress: GeoLocate[0].formatted_address,
+            farmerCountry: addressArray[len - 1],
+          }).catch((err) => console.error("Failed to update farmer location:", err));
+        }
+      })
+      .catch((err) => console.error("Failed to fetch location:", err));
+  }
+
   const token = GenerateToken(user);
-  return res.status(201).json({ message: "User registered successfully", User: user, token });
+  const { password: _, ...userWithoutPassword } = user.toObject();
+  return res.status(201).json({
+    message: "User registered successfully",
+    user: userWithoutPassword,
+    token,
+    redirect: role === "farmer" ? "/farmer/dashboard" : "/",
+  });
 });
 
 const UserLogin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+
   if (!email || !password) {
     return res.status(400).json({ message: "Please enter all fields" });
   }
 
-  const UserInDB = await User.findOne({ email });
-  if (!UserInDB) {
-    return res.status(400).json({ message: "User not exists" });
+  const userInDB = await User.findOne({ email }).lean();
+  if (!userInDB) {
+    return res.status(400).json({ message: "User not found" });
   }
 
-  const isPasswordMatched = await comparePassword(password, UserInDB.password);
+  const isPasswordMatched = await comparePassword(password, userInDB.password);
   if (!isPasswordMatched) {
     return res.status(400).json({ message: "Invalid credentials" });
   }
 
-  const token = GenerateToken(UserInDB);
+  const token = GenerateToken(userInDB);
+  const { password: _, ...userWithoutPassword } = userInDB;
   res.setHeader("Authorization", `Bearer ${token}`);
-  return res.status(200).json({ message: "Login successful", token, user: UserInDB });
+  return res.status(200).json({
+    message: "Login successful",
+    token,
+    user: userWithoutPassword,
+    redirect: userInDB.role === "farmer" ? "/farmer/dashboard" : "/",
+  });
 });
 
 const BuyItem = asyncHandler(async (req, res) => {
@@ -84,23 +119,12 @@ const GetUser = asyncHandler(async (req, res) => {
   if (!id) {
     return res.status(400).json({ message: "No user id provided!" });
   }
-  const user = await User.findById(id);
+  const user = await User.findById(id).lean();
   if (!user) {
     return res.status(404).json({ message: "User not found!" });
   }
-  return res.status(200).json({ user });
-});
-
-const getFarmerByEmail = asyncHandler(async (req, res) => {
-  const { farmerEmail } = req.body;
-  if (!farmerEmail) {
-    return res.status(400).json({ message: "No farmer email provided!" });
-  }
-  const farmer = await Farmer.findOne({ farmerEmail });
-  if (!farmer) {
-    return res.status(404).json({ message: "Farmer not found!" });
-  }
-  return res.status(200).json({ farmer });
+  const { password: _, ...userWithoutPassword } = user;
+  return res.status(200).json({ user: userWithoutPassword });
 });
 
 const GetItemsByFarmerEmail = asyncHandler(async (req, res) => {
@@ -120,6 +144,5 @@ module.exports = {
   UserLogin,
   BuyItem,
   GetUser,
-  getFarmerByEmail,
   GetItemsByFarmerEmail,
 };

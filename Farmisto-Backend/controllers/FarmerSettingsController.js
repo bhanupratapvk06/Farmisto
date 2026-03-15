@@ -1,14 +1,14 @@
-const Farmer = require("../models/Farmer");
+const User = require("../models/User");
 const asyncHandler = require("../middleware/asyncHandler");
 
 const getPaymentSettings = asyncHandler(async (req, res) => {
-  const farmer = await Farmer.findOne({ farmerEmail: req.user.email });
+  const farmer = await User.findOne({ email: req.user.email, role: "farmer" });
   if (!farmer) return res.status(404).json({ message: "Farmer not found" });
   return res.status(200).json({ payment: farmer.paymentSettings || {} });
 });
 
 const updatePaymentSettings = asyncHandler(async (req, res) => {
-  const farmer = await Farmer.findOne({ farmerEmail: req.user.email });
+  const farmer = await User.findOne({ email: req.user.email, role: "farmer" });
   if (!farmer) return res.status(404).json({ message: "Farmer not found" });
   const allowedFields = ["accountHolderName", "accountNumber", "bankName", "ifscCode", "upiId", "paymentGateway"];
   Object.keys(req.body).forEach((key) => {
