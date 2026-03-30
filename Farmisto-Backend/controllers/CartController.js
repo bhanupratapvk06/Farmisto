@@ -2,6 +2,21 @@ const Cart = require("../models/Cart");
 const asyncHandler = require("../middleware/asyncHandler");
 
 /**
+ * Calculates derived fields for a cart item based on price, discount, and quantity.
+ * @param {Object} item - The cart item document.
+ * @returns {{discountedPrice:number, saving:number, totalCost:number}}
+ */
+const calculateItemFields = (item) => {
+  const price = parseFloat(item.itemPrice) || 0;
+  const discount = parseFloat(item.discount) || 0;
+  const quantity = parseInt(item.quantity) || 0;
+  const discountedPrice = price * (1 - discount / 100);
+  const saving = price - discountedPrice;
+  const totalCost = discountedPrice * quantity;
+  return { discountedPrice, saving, totalCost };
+};
+
+/**
  * Retrieves cart details for a given buyer ID.
  * @param {Object} req - Express request object.
  * @param {Object} res - Express response object.
@@ -90,27 +105,17 @@ const ItemDiscountUpdate = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Invalid discount percentage!" });
   }
 
-  const item = await Cart.findByIdAndUpdate(
-    { _id: id },
-    { $set: { discount } },
-    { new: true }
-  );
+  const item = await Cart.findById(id);
   if (!item) return res.status(404).json({ message: "Item not found!" });
+
+  item.discount = discount;
+  const { discountedPrice, saving, totalCost } = calculateItemFields(item);
+  item.discountedPrice = discountedPrice;
+  item.savingPrice = saving;
+  item.totalItemCost = totalCost;
+
+  await item.save();
   return res.status(200).json({ message: "Item discount updated successfully!", item });
 });
 
-const ItemDelete = asyncHandler(async (req, res) => {
-  const id = req.params.id;
-  if (!id) return res.status(400).json({ message: "No item id provided!" });
-  const item = await Cart.findByIdAndDelete(id);
-  if (!item) return res.status(404).json({ message: "Item not found!" });
-  return res.status(200).json({ message: "Item deleted successfully!", item });
-});
-
-module.exports = {
-  GetCartDetail,
-  ItemQuantityUpdate,
-  ItemDelete,
-  ItemDiscountUpdate,
-  ClearCart,
-};
+module.exports = { GetCartDetail, ClearCart, ItemQuantityUpdate, ItemDiscountUpdate };
