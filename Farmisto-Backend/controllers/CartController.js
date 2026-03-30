@@ -1,6 +1,12 @@
 const Cart = require("../models/Cart");
 const asyncHandler = require("../middleware/asyncHandler");
 
+/**
+ * Retrieves cart details for a given buyer ID.
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @returns {Promise<void>} Sends JSON response with cart data.
+ */
 const GetCartDetail = asyncHandler(async (req, res) => {
   const { id } = req.body;
   const cartItems = await Cart.find({ buyer: id });
@@ -98,7 +104,7 @@ const ItemDelete = asyncHandler(async (req, res) => {
   if (!id) return res.status(400).json({ message: "No item id provided!" });
   const item = await Cart.findByIdAndDelete(id);
   if (!item) return res.status(404).json({ message: "Item not found!" });
-  return res.status(200).json({ message: "Item deleted successfully!" });
+  return res.status(200).json({ message: "Item deleted successfully!", item });
 });
 
 module.exports = {
